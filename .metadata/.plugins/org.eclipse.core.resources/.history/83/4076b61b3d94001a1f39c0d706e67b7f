@@ -1,0 +1,21 @@
+package application;
+
+import java.net.Socket;
+
+public class Client { //Server가 한명의 클라이언트와 통신하기 위해 필요한 가능을 정의
+
+	Socket socket; //통신을 위한
+	public Client(Socket socket) {
+		this.socket = socket;
+		receive(); // 클라이언트로 부터 지속적으로 메세지를 전달 받도록
+	}
+	
+	// 클라이언트로 부터 지속적으로 메세지를 전달 받도록 하는 메소드
+	public void receive() {
+		
+	}
+	//클라이언트에게 메세지를 보내기 위한 메소드
+	public void send(String message) {
+		
+	}
+}

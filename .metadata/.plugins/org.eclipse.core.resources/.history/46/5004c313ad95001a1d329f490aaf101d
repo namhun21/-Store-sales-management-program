@@ -1,0 +1,24 @@
+package controller;
+
+import javafx.fxml.FXML;
+import model.Customer;
+
+public class MainFrameController {
+	private Main main;
+	public MainFrameController() {
+		
+	}
+	public void setMain(Main main) {
+		this.main = main;
+	}
+	@FXML
+	private void loginAction() {
+		Customer customer = new Customer("","","","");
+		int returnValue = main.setCustomerInfo(customer);
+		
+	}
+	@FXML
+	private void signupAction() {
+		
+	}
+}
