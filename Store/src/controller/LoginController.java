@@ -43,9 +43,20 @@ public class LoginController {
 			CustomerDAO customerDAO = new CustomerDAO();
 			int result = customerDAO.confirmInfo(id, pw);
 			if(result == 1) {
-				this.main.setOrder(customer);
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.initOwner(this.main.getPrimaryStage());
+				alert.setTitle("로그인 성공");
+				alert.setHeaderText("어서오세요. 카페입니다.");
+				alert.setContentText(id+"님 환영합니다.");
+				alert.showAndWait();
+				this.main.setOrderView(customer);
 			}else {
-				
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.initOwner(this.main.getPrimaryStage());
+				alert.setTitle("로그인 실패");
+				alert.setHeaderText("아이디나 비밀번호가 일치하지 않습니다.");
+				alert.setContentText("아이디와 비밀번호를 다시 입력해 주세요.");
+				alert.showAndWait();
 			}
 		}
 	}
@@ -59,7 +70,7 @@ public class LoginController {
 	@FXML
 	private void signupAction() {
 		Customer customer = new Customer("","","","");
-		main.setCustomerInfo(customer);
+		main.setSignUpView(customer);
 	}
 	
 	private boolean valid() {

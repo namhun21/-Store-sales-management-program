@@ -49,23 +49,25 @@ public class Main extends Application{
 		}
 	}
 	
-	public void setOrder(Customer customer) {
+	public void setOrderView(Customer customer) {
 		try {
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(Main.class.getResource("../view/Test.fxml"));
+			loader.setLocation(Main.class.getResource("../view/Order.fxml"));
 			MainFrameView = (AnchorPane) loader.load();
 			Scene scene = new Scene(MainFrameView);
 			primaryStage.setScene(scene);
 			primaryStage.show();
 			primaryStage.setResizable(false);
+			OrderController controller = loader.getController();
+			controller.setMain(this);
 		}
 		catch(Exception e) {
-			
+			e.printStackTrace();
 		}
 		
 	}
 	
-	public void setCustomerInfo(Customer customer) {
+	public void setSignUpView(Customer customer) {
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(Main.class.getResource("../view/Signup.fxml"));

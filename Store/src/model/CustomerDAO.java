@@ -43,7 +43,7 @@ public class CustomerDAO {
 				else
 					return -1;
 			}
-			return 1;
+			return -1;
 		}
 		catch(Exception e) {
 			e.printStackTrace();
