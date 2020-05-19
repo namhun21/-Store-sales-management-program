@@ -10,26 +10,30 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Customer;
+import model.OrderDAO;
+import model.OrderList;
 
 
 
 public class Main extends Application{
 	private Stage primaryStage;
 	private AnchorPane MainFrameView;
-	//private static ObservableList<Customer> customerList = FXCollections.observableArrayList();
+	public static ObservableList<OrderList> orderList = FXCollections.observableArrayList();
 	
 	public Main() {
-
+		
+		
 	}
 	
-//	public ObservableList<Customer> getCustomerList() {
-//		return customerList;
-//	}
+	public ObservableList<OrderList> getOrderList() {
+		return orderList;
+	}
 	@Override 
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 		this.primaryStage.setTitle("Cafe Sales Management System");
 		setMainFrameView();
+		//setAdminView();
 	}
 	public void setMainFrameView() {
 		try {
@@ -66,7 +70,24 @@ public class Main extends Application{
 		}
 		
 	}
-	
+	public void setAdminView() {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(Main.class.getResource("../view/AdminPage.fxml"));
+			MainFrameView = (AnchorPane) loader.load();
+			Scene scene = new Scene(MainFrameView);
+			primaryStage.setScene(scene);
+			primaryStage.show();
+			primaryStage.setResizable(false);
+			
+			AdminController controller = loader.getController();
+			controller.setMain(this);
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
 	public void setSignUpView(Customer customer) {
 		try {
 			FXMLLoader loader = new FXMLLoader();
@@ -82,7 +103,7 @@ public class Main extends Application{
 			
 			SignupController controller = loader.getController();
 			controller.setDialogStage(dialogStage);
-			controller.setCustomer(customer);
+			//controller.setCustomer(customer);
 			
 			dialogStage.showAndWait();
 			//return controller.getReturnValue();

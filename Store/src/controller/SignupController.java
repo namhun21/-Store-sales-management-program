@@ -19,7 +19,7 @@ public class SignupController {
 	private TextField phoneField;
 	
 	private Stage dialogStage;
-	private Customer customer;
+	Customer customer;
 	private int returnValue = 0;
 	private Main main;
 	private boolean isCheckID = false;
@@ -27,30 +27,23 @@ public class SignupController {
 		this.main = main;
 	}
 	
-	@FXML
-	private void initialize() {
-		
-	}
 	public void setDialogStage(Stage dialogStage) {
 		this.dialogStage = dialogStage;
 	}
-	public void setCustomer(Customer customer) {
-		this.customer = customer;
-		nameField.setText(customer.getName());
-		idField.setText(customer.getID());
-		pwField.setText(customer.getPw());
-		phoneField.setText(customer.getPhone());
-	}
+//	public void setCustomer(Customer customer) {
+//		this.customer = customer;
+//		nameField.setText(customer.getName());
+//		idField.setText(customer.getID());
+//		pwField.setText(customer.getPw());
+//		phoneField.setText(customer.getPhone());
+//	}
 	public int getReturnValue() {
 		return returnValue;
 	}
 	@FXML
 	private void completeAction() {
 		if(valid()) {
-			customer.setName(nameField.getText());
-			customer.setID(idField.getText());
-			customer.setPw(pwField.getText());
-			customer.setPhone(phoneField.getText());
+			customer = new Customer(nameField.getText(),idField.getText(),pwField.getText(),phoneField.getText());
 			
 			returnValue = 1;
 			if(this.isCheckID == false) {

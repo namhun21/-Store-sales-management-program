@@ -11,7 +11,6 @@ import model.CustomerDAO;
 
 public class LoginController {
 	private Main main;
-	private Button loginButton;
 	@FXML 
 	private TextField nameField;
 	@FXML 
@@ -50,7 +49,16 @@ public class LoginController {
 				alert.setContentText(id+"님 환영합니다.");
 				alert.showAndWait();
 				this.main.setOrderView(customer);
-			}else {
+			}else if(result == 2) {
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.initOwner(this.main.getPrimaryStage());
+				alert.setTitle("로그인 성공");
+				alert.setHeaderText("어서오세요. 카페입니다.");
+				alert.setContentText(id+"관리자님 환영합니다.");
+				alert.showAndWait();
+				this.main.setAdminView();
+			}
+			else {
 				Alert alert = new Alert(AlertType.ERROR);
 				alert.initOwner(this.main.getPrimaryStage());
 				alert.setTitle("로그인 실패");

@@ -50,7 +50,7 @@
                         </Text>
                         <TextField fx:id="idField" layoutX="170.0" layoutY="44.0" />
                         <TextField fx:id="pwField" layoutX="170.0" layoutY="84.0" />
-                        <Button fx:id="loginButton" layoutX="400.0" layoutY="44.0" mnemonicParsing="false" onAction="#loginAction" prefHeight="29.0" prefWidth="76.0" text="Login" />
+                        <Button layoutX="400.0" layoutY="44.0" mnemonicParsing="false" onAction="#loginAction" prefHeight="29.0" prefWidth="76.0" text="Login" />
                         <Button layoutX="400.0" layoutY="84.0" mnemonicParsing="false" onAction="#signupAction" text="Sign Up" />
                      </children>
                   </Pane>

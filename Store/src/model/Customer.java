@@ -8,7 +8,7 @@ public class Customer {
 	private final StringProperty id;
 	private final StringProperty pw;
 	private final StringProperty phone;
-	private final String is_admin = "0";
+	private String is_admin = "0";
 	
 	public Customer(String name, String id, String pw, String phone) {
 		this.name = new SimpleStringProperty(name);
