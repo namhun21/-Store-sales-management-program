@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -19,7 +20,7 @@ public class Main extends Application{
 	private Stage primaryStage;
 	private AnchorPane MainFrameView;
 	public static ObservableList<OrderList> orderList = FXCollections.observableArrayList();
-	
+	public static String uid;
 	public Main() {
 		
 		
@@ -47,23 +48,26 @@ public class Main extends Application{
 			primaryStage.setResizable(false);
 			LoginController controller = loader.getController();
 			controller.setMain(this);
+			uid = "";
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void setOrderView(Customer customer) {
+	public void setOrderView(String id) {
 		try {
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(Main.class.getResource("../view/Order.fxml"));
-			MainFrameView = (AnchorPane) loader.load();
-			Scene scene = new Scene(MainFrameView);
-			primaryStage.setScene(scene);
-			primaryStage.show();
+			loader.setLocation(Main.class.getResource("../view/OrderListPage.fxml"));
+            Parent afterLogin = loader.load();
+            Scene scene = new Scene(afterLogin);
+            primaryStage.setScene(scene);
+            primaryStage.show();
 			primaryStage.setResizable(false);
+			
 			OrderController controller = loader.getController();
-			controller.setMain(this);
+            controller.setMain(this);
+            controller.setUserID(id);
 		}
 		catch(Exception e) {
 			e.printStackTrace();

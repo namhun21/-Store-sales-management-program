@@ -42,13 +42,14 @@ public class LoginController {
 			CustomerDAO customerDAO = new CustomerDAO();
 			int result = customerDAO.confirmInfo(id, pw);
 			if(result == 1) {
+				main.uid = id;
 				Alert alert = new Alert(AlertType.INFORMATION);
 				alert.initOwner(this.main.getPrimaryStage());
 				alert.setTitle("로그인 성공");
 				alert.setHeaderText("어서오세요. 카페입니다.");
 				alert.setContentText(id+"님 환영합니다.");
 				alert.showAndWait();
-				this.main.setOrderView(customer);
+				this.main.setOrderView(main.uid);
 			}else if(result == 2) {
 				Alert alert = new Alert(AlertType.INFORMATION);
 				alert.initOwner(this.main.getPrimaryStage());
@@ -75,6 +76,7 @@ public class LoginController {
 	public int getReturnValue() {
 		return returnValue;
 	}
+	
 	@FXML
 	private void signupAction() {
 		Customer customer = new Customer("","","","");
