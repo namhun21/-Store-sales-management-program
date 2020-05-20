@@ -65,7 +65,7 @@ public class CustomerDAO {
 		return -1;
 	}
 	public int insertCustomer(Customer cus) {
-		String SQL = "INSERT INTO USER_INFO VALUES(?,?,?,?,?)";
+		String SQL = "INSERT INTO USER_INFO VALUES(?,?,?,?,?,?)";
 		try {
 			Customer customer = cus;
 			pstmt = conn.prepareStatement(SQL);
@@ -74,6 +74,7 @@ public class CustomerDAO {
 			pstmt.setString(3, customer.getPw());
 			pstmt.setString(4, customer.getPhone());
 			pstmt.setString(5, customer.getIs_Admin());
+			pstmt.setInt(6, customer.getTotal_Sales());
 			pstmt.executeUpdate();
 			return 1;
 		}catch(Exception e) {

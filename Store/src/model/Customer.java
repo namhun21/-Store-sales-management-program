@@ -9,6 +9,7 @@ public class Customer {
 	private final StringProperty pw;
 	private final StringProperty phone;
 	private String is_admin = "0";
+	private int total_sales = 0;
 	
 	public Customer(String name, String id, String pw, String phone) {
 		this.name = new SimpleStringProperty(name);
@@ -62,6 +63,9 @@ public class Customer {
 	
 	public String getIs_Admin() {
 		return is_admin;
+	}
+	public int getTotal_Sales() {
+		return total_sales;
 	}
 
 }

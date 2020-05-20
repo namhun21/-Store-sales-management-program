@@ -28,6 +28,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import model.MenuDAO;
+import model.OrderDAO;
 import model.TableRowDataModel;
 
 public class OrderController implements Initializable{
@@ -83,7 +84,9 @@ public class OrderController implements Initializable{
 	public void inputItems(ActionEvent event) throws IOException {
 		MenuDAO menuDAO = new MenuDAO();
 		menuDAO.inputOrder(orderListTable, user_id);
-
+		OrderDAO orderDAO = new OrderDAO();
+		orderDAO.setOrderList();
+		
 		// ÆË¾÷ Ã³¸®
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/OrderCompletePopupController.fxml"));
 		AnchorPane page = (AnchorPane) loader.load();
@@ -97,6 +100,7 @@ public class OrderController implements Initializable{
 		OrderCompletePopupController controller = loader.getController();
 		controller.setDialogStage(dialogStage);
 		dialogStage.showAndWait();
+		orderListTable.getItems().clear();
 	}
 
 	@FXML
@@ -152,6 +156,7 @@ public class OrderController implements Initializable{
 					new SimpleIntegerProperty(Integer.parseInt(priceLabel_09.getText())),
 					new SimpleIntegerProperty(1)));
 			inputItemToTable(itemList);
+			
 		}
 	}
 

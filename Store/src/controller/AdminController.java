@@ -32,6 +32,7 @@ public class AdminController implements Initializable{
 	
 	
 	private Main main;
+	OrderDAO orderDAO = new OrderDAO();
 	public void setMain(Main main) {
 		this.main = main;
 	}
@@ -45,9 +46,17 @@ public class AdminController implements Initializable{
 		
 	}
 	@FXML
+	private void cancelAction()	{
+		
+	}
+	@FXML
 	private void completeAction() {
 		 int selectedIndex = orderList2.getSelectionModel().getSelectedIndex();
 	     if(selectedIndex >= 0) {
+	    	 String order_id = (orderList2.getItems().get(selectedIndex).getOrderID());
+	    	 System.out.println(order_id);
+	    	 orderDAO.changeOIsComplete(order_id);
+	    	 orderDAO.calculateUserSale(order_id);
 	    	 orderList2.getItems().remove(selectedIndex);
 	    	 System.out.println(main.getOrderList().size());
 	     }
@@ -58,21 +67,25 @@ public class AdminController implements Initializable{
 		
 	}
 	@FXML
-	private void lookUpAction() {
-		System.out.println(main.getOrderList().size());
-		orderList2.setItems(main.getOrderList());
-	}
-
-
-	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		OrderDAO orderDAO = new OrderDAO();
+	private void lookUpAction() { // 조회버튼을 눌렀을때 새로운 주문 확인할 수 있는 메소드 
+		orderList2.getItems().clear();	
 		ObservableList<OrderList> tmpList = orderDAO.getOrderList();
 		for(int i = 0; i< tmpList.size();i++) {
 			main.orderList.add(tmpList.get(i));
-			System.out.println(main.orderList.get(i).getMenuName());
-		}
-		
+			}
+		orderList2.setItems(main.getOrderList());
+	}
+
+	public void setOrderListView(AdminController admincontroller) {  //adminview에 들어왔을때 주문목록 출력되도록 하는 함수
+		ObservableList<OrderList> tmpList = orderDAO.getOrderList();
+		for(int i = 0; i< tmpList.size();i++) {
+			main.orderList.add(tmpList.get(i));
+			}
+		orderList2.setItems(main.getOrderList());
+	}
+	
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
 		this.orderID.setCellValueFactory(cellData -> cellData.getValue().getOrderIDProperty());
 		this.userID.setCellValueFactory(cellData -> cellData.getValue().getUserIDProperty());
 		this.menuName.setCellValueFactory(cellData -> cellData.getValue().getMenuNameProperty());

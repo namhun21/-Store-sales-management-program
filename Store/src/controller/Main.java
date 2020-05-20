@@ -86,6 +86,7 @@ public class Main extends Application{
 			
 			AdminController controller = loader.getController();
 			controller.setMain(this);
+			controller.setOrderListView(controller);
 			
 		}catch(Exception e) {
 			e.printStackTrace();
