@@ -6,9 +6,14 @@ import java.util.ResourceBundle;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.stage.Stage;
 import model.Order;
 import model.OrderDAO;
 import model.OrderList;
@@ -29,7 +34,8 @@ public class AdminController implements Initializable{
 	private TableColumn<OrderList, String> price;
 	@FXML
 	private TableColumn<OrderList, String> count;
-	
+	@FXML
+	private Button sell;
 	
 	private Main main;
 	OrderDAO orderDAO = new OrderDAO();
@@ -42,8 +48,13 @@ public class AdminController implements Initializable{
 		
 	}
 	@FXML
-	private void salesAction() {
-		
+	private void salesAction() throws Exception {
+		this.main.setSellView();
+//	  Parent sell1 = FXMLLoader.load(getClass().getResource("../view/Sales.fxml"));
+//      Scene scene1 = new Scene(sell1);
+//      Stage primaryStage = (Stage) sell.getScene().getWindow();
+//      primaryStage.setTitle("¿¬½À");
+//      primaryStage.setScene(scene1);
 	}
 	@FXML
 	private void cancelAction()	{

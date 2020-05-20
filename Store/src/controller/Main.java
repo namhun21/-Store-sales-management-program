@@ -39,7 +39,7 @@ public class Main extends Application{
 	public void setMainFrameView() {
 		try {
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(Main.class.getResource("../view/RootLayout.fxml"));
+			loader.setLocation(Main.class.getResource("../view/LoginView.fxml"));
 			MainFrameView = (AnchorPane) loader.load();
 			 
 			Scene scene = new Scene(MainFrameView);
@@ -92,6 +92,24 @@ public class Main extends Application{
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public void setSellView() {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(Main.class.getResource("../view/Sales.fxml"));
+	        Parent Sellbutton = loader.load();
+	        Scene scene = new Scene(Sellbutton);
+	        primaryStage.setScene(scene);
+	        primaryStage.show();
+			primaryStage.setResizable(false);
+			
+			SellController controller = loader.getController();
+	        controller.setMain(this);
+	        
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	public void setSignUpView(Customer customer) {
 		try {
