@@ -47,7 +47,12 @@ public class AdminController implements Initializable{
 	}
 	@FXML
 	private void cancelAction()	{
-		
+		 int selectedIndex = orderList2.getSelectionModel().getSelectedIndex();
+		 if(selectedIndex >= 0) {
+			 String order_id = (orderList2.getItems().get(selectedIndex).getOrderID());
+			 orderDAO.cancelOrder(order_id);
+			 orderList2.getItems().remove(selectedIndex);
+		 }
 	}
 	@FXML
 	private void completeAction() {

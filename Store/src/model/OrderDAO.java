@@ -37,8 +37,8 @@ public class OrderDAO {
 			conn = DriverManager.getConnection(dbURL,ID,pw);
 			pstmt = conn.prepareStatement(SQL);
 			rs = pstmt.executeQuery();
-			System.out.println("쿼리받을 준비");
-			System.out.println(SQL);
+			//System.out.println("쿼리받을 준비");
+			//System.out.println(SQL);
 			
 			while(rs.next()) {
 				OrderList ol = new OrderList(rs.getString("ORDER_ID"),rs.getString("OUSER_ID"),rs.getString("MNAME"),rs.getString("PRICE"),rs.getString("OCOUNT"));
@@ -60,6 +60,26 @@ public class OrderDAO {
 		}
 		return oList;
 	}
+	public void cancelOrder(String order_id) {
+		String SQL = "delete from orders where order_id = ?";
+		try {
+			conn = DriverManager.getConnection(dbURL,ID,pw);
+			pstmt = conn.prepareStatement(SQL);
+			pstmt.setString(1, order_id);
+			pstmt.executeUpdate();
+			System.out.println("주문취소");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				pstmt.close();
+				conn.close();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	public void calculateUserSale(String order_id) {
 		String SQL = "update user_info set total_sales = total_sales + (select MPRICE*OCOUNT FROM orders,menu where ORDERS.OMENU_ID = MENU.MENU_ID and TO_CHAR(orders.odate,'YY-MM-DD') = TO_CHAR(sysdate,'YY-MM-DD') and order_id = ?) where user_id = (select ouser_id from orders where order_id = ?)";
 		try {
@@ -68,6 +88,7 @@ public class OrderDAO {
 			pstmt.setString(1, order_id);
 			pstmt.setString(2, order_id);
 			pstmt.executeUpdate();
+			System.out.println("사용자 Sale 증가");
 
 		}
 		catch(Exception e) {
@@ -90,7 +111,7 @@ public class OrderDAO {
 			pstmt = conn.prepareStatement(SQL);
 			pstmt.setString(1, order_id);
 			int r = pstmt.executeUpdate();
-			System.out.println("변경된 row : "+r);
+			System.out.println(order_id+"완료");
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -111,7 +132,7 @@ public class OrderDAO {
 			pstmt = conn.prepareStatement(SQL);
 			rs = pstmt.executeQuery();
 			System.out.println("쿼리받을 준비");
-			System.out.println(SQL);
+			//System.out.println(SQL);
 			
 			while(rs.next()) {
 				OrderList olist = new OrderList(rs.getString("ORDER_ID"),rs.getString("OUSER_ID"),rs.getString("MNAME"),rs.getString("PRICE"),rs.getString("OCOUNT"));
