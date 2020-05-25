@@ -12,6 +12,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableView;
+import javafx.stage.Stage;
 import model.CumaDTO;
 import model.CustoManageDAO;
 import model.SDAO;
@@ -30,6 +31,7 @@ public class CustomerManageController implements Initializable {
 	private ObservableList<CumaDTO> CUMA;
 	CustoManageDAO cDAO;
 	private Main main;
+	private Stage dialogStage;
 
 	public void setMain(Main main) {
 		this.main = main;
@@ -47,12 +49,13 @@ public class CustomerManageController implements Initializable {
 
 	public void customer_view() {
 		try {
+			Main.Cumalist.clear();
 			ObservableList<CumaDTO> tmpList = cDAO.Cus_value();
-			for (int i = 0; i < tmpList.size(); i++) {
+			for (int i = 0; i < tmpList.size(); i++) {	
 				Main.Cumalist.add(tmpList.get(i));
 //				System.out.println(Main.Cumalist.get(i).getName());
 			}
-
+			viewtable.getItems().clear();	
 			viewtable.setItems(main.getcumaList());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -68,17 +71,20 @@ public class CustomerManageController implements Initializable {
 		}
 	}
 
-	@FXML
-	public void back(ActionEvent event) throws Exception {
-//	      Parent Mains = FXMLLoader.load(getClass().getResource("../view/AdminPage.fxml"));
-//	      Scene scene3 = new Scene(Mains);
-//	      Stage primaryStage = (Stage) back.getScene().getWindow();
-//	      primaryStage.setTitle("연습");
-//	      primaryStage.setScene(scene3);
-
-		this.main.orderList.clear();
-		this.main.Cumalist.clear();
-		this.main.setAdminView();
+//	@FXML
+//	public void back(ActionEvent event) throws Exception {
+////	      Parent Mains = FXMLLoader.load(getClass().getResource("../view/AdminPage.fxml"));
+////	      Scene scene3 = new Scene(Mains);
+////	      Stage primaryStage = (Stage) back.getScene().getWindow();
+////	      primaryStage.setTitle("연습");
+////	      primaryStage.setScene(scene3);
+//
+//		this.main.orderList.clear();
+//		this.main.Cumalist.clear();
+//		this.main.setAdminView();
+//	}
+	public void setDialogStage(Stage dialogStage) {
+		this.dialogStage = dialogStage;
 	}
 
 }

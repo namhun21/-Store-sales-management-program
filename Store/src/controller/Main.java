@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import model.CumaDTO;
 import model.Customer;
 import model.OrderDAO;
+import model.OrderHistoryDTO;
 import model.OrderList;
 
 
@@ -22,6 +23,7 @@ public class Main extends Application{ // ÄÁÆ®·Ñ·¯¿¡ ÀÇÇØ º¯È¯µÇ´Â È­¸é ´Ù·ç±â À
 	private AnchorPane MainFrameView;
 	public static ObservableList<OrderList> orderList = FXCollections.observableArrayList();
 	public static ObservableList<CumaDTO> Cumalist = FXCollections.observableArrayList();
+	public static ObservableList<OrderHistoryDTO> historyList =  FXCollections.observableArrayList();
 	public static String uid;
 	public Main() {
 		
@@ -34,6 +36,9 @@ public class Main extends Application{ // ÄÁÆ®·Ñ·¯¿¡ ÀÇÇØ º¯È¯µÇ´Â È­¸é ´Ù·ç±â À
 	
 	public ObservableList<CumaDTO> getcumaList() {
 		return Cumalist;
+	}
+	public ObservableList<OrderHistoryDTO> gethistoryList() {
+		return historyList;
 	}
 	@Override 
 	public void start(Stage primaryStage) {
@@ -99,20 +104,55 @@ public class Main extends Application{ // ÄÁÆ®·Ñ·¯¿¡ ÀÇÇØ º¯È¯µÇ´Â È­¸é ´Ù·ç±â À
 		}
 		
 	}
+	public void setHistoryView(String id) {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(Main.class.getResource("../view/OrderHistory.fxml"));
+			AnchorPane page = (AnchorPane) loader.load();
+			
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("ÁÖ¹®ÀÌ·ÂÁ¶È¸");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(primaryStage);
+			Scene scene = new Scene(page);
+			dialogStage.setScene(scene);
+			OrderHistoryController controller = loader.getController();
+			controller.setMain(this);
+			controller.setUserID(id);
+			controller.setDialogStage(dialogStage);
+			controller.orderHistoryView();
+			dialogStage.showAndWait();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
 	
 	public void setSellView() { //°ü¸®ÀÚ°¡ ¸ÅÃâ°ü¸® ¹öÆ°À» ´­·¶À»¶§ ÀÌµ¿µÇ´Â È­¸é
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(Main.class.getResource("../view/Sales.fxml"));
-	        Parent Sellbutton = loader.load();
-	        Scene scene = new Scene(Sellbutton);
-	        primaryStage.setScene(scene);
-	        primaryStage.show();
-			primaryStage.setResizable(false);
+//	        Parent Sellbutton = loader.load();
+//	        Scene scene = new Scene(Sellbutton);
+//	        primaryStage.setScene(scene);
+//	        primaryStage.show();
+//			primaryStage.setResizable(false);
+//			
+//			SellController controller = loader.getController();
+//	        controller.setMain(this);
+			AnchorPane page = (AnchorPane) loader.load();
 			
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("¸ÅÃâ°ü¸®");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(primaryStage);
+			Scene scene = new Scene(page);
+			dialogStage.setScene(scene);
 			SellController controller = loader.getController();
-	        controller.setMain(this);
-	        
+			controller.setMain(this);
+			controller.setDialogStage(dialogStage);
+			dialogStage.showAndWait();
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -122,15 +162,29 @@ public class Main extends Application{ // ÄÁÆ®·Ñ·¯¿¡ ÀÇÇØ º¯È¯µÇ´Â È­¸é ´Ù·ç±â À
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(Main.class.getResource("../view/Customer.fxml"));
-	        Parent Managebutton = loader.load();
-	        Scene scene = new Scene(Managebutton);
-	        primaryStage.setScene(scene);
-	        primaryStage.show();
-			primaryStage.setResizable(false);
+//	        Parent Managebutton = loader.load();
+//	        Scene scene = new Scene(Managebutton);
+//	        primaryStage.setScene(scene);
+//	        primaryStage.show();
+//			primaryStage.setResizable(false);
+//			
+//			CustomerManageController controller = loader.getController();
+//	        controller.setMain(this);
+//	        controller.customer_view();
+			AnchorPane page = (AnchorPane) loader.load();
+			
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("°í°´°ü¸®");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(primaryStage);
+			Scene scene = new Scene(page);
+			dialogStage.setScene(scene);
 			
 			CustomerManageController controller = loader.getController();
-	        controller.setMain(this);
+			controller.setDialogStage(dialogStage);
+			controller.setMain(this);
 	        controller.customer_view();
+			dialogStage.showAndWait();
 	        
 		}catch(Exception e) {
 			e.printStackTrace();

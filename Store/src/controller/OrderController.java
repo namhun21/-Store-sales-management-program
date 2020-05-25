@@ -161,6 +161,10 @@ public class OrderController implements Initializable{
 		}
 	}
 	@FXML
+	public void historyAction() {
+		this.main.setHistoryView(this.user_id);
+	}
+	@FXML
 	public void sendAction() {
 		send(user_id+":"+input.getText()+"\n");
 		input.setText("");
@@ -257,7 +261,7 @@ public class OrderController implements Initializable{
 			imgViewlist.get(i++).setImage(new Image(file.toURI().toString()));
 		}
 	}
-
+	
 	public void inputItemToTable(ObservableList<TableRowDataModel> itemList) {
 		Mname.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
 		Mcount.setCellValueFactory(cellData -> cellData.getValue().countProperty().asObject());

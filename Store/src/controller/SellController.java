@@ -52,20 +52,23 @@ public class SellController implements Initializable {
 
    @FXML
    private Button search;
-   @FXML
-   private Button back;
+   
    @FXML
    private Label label; // 선택날짜
    @FXML
    private SDAO sdao;
    private ObservableList<SDTO> sdaoo;
 
+   private Stage dialogStage;
    private String date;
    private String a;
    private Main main;
    public void setMain(Main main) {
 	   this.main = main;
    }
+   public void setDialogStage(Stage dialogStage) {
+		this.dialogStage = dialogStage;
+	}
    public void initialize(URL location, ResourceBundle resources) {
       sdao = new SDAO();
       Cal.setValue(LocalDate.now());
@@ -107,9 +110,5 @@ public class SellController implements Initializable {
          System.out.println("Data를 테이블에 가져올 수 없습니다.");
       }
    }
-   @FXML
-   public void back(ActionEvent event) throws Exception {
-	    this.main.orderList.clear();
-	    this.main.setAdminView();
-   }
+   
 }
