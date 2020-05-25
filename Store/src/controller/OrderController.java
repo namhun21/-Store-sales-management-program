@@ -2,11 +2,15 @@ package controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -20,6 +24,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -52,13 +57,89 @@ public class OrderController implements Initializable{
 	private TableColumn<TableRowDataModel, Integer> Mprice;
 	@FXML
 	private TableColumn<TableRowDataModel, Integer> Mcount;
+	@FXML
+	private TextArea chatArea;
+	@FXML
+	private TextField input;
+	Socket socket;
 
 	
 	ArrayList<ImageView> imgViewlist = new ArrayList<ImageView>();
 	ArrayList<Label> nameLabellist = new ArrayList<Label>();
 	ObservableList<TableRowDataModel> itemList = FXCollections.observableArrayList();
 	private Window primaryStage;
-
+	
+	//클라이언트 프로그램 동작 메소드
+			public void startClient(String IP, int port) {
+				
+				Thread thread = new Thread() {
+					public void run() {
+						try {
+							socket = new Socket(IP,port);
+							receive();
+						}
+						catch(Exception e) {
+							if(!socket.isClosed()) {
+								stopClient();
+								System.out.println("[서버 접속 실패]");
+								Platform.exit();
+							}
+						}
+					}
+				};
+				thread.start();
+			}
+			
+			//클라이언트 종료 메소드
+			public void stopClient() {
+				try {
+					if(socket != null && !socket.isClosed()) {
+						socket.close();
+					}
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+			//서버로부터 메세지를 전달받는 메소드
+			public void receive() {
+				while(true) {
+					try {
+						InputStream in = socket.getInputStream();
+						byte[] buffer = new byte[512];
+						int length = in.read(buffer);
+						if(length == -1 ) throw new IOException();
+						String message = new String(buffer,0,length,"UTF-8");
+						Platform.runLater(()->{
+							chatArea.appendText(message);
+						});
+					}
+					catch(Exception e) {
+						stopClient();
+						break;
+					}
+				}
+			}
+			
+			//서버로 메세지를 전송
+			public void send(String message) {
+				Thread thread = new Thread() {
+					public void run() {
+						try {
+							OutputStream out = socket.getOutputStream();
+							byte[] buffer = message.getBytes("UTF-8");
+							out.write(buffer);
+							out.flush();
+						}
+						catch(Exception e) {
+							stopClient();
+						}
+					}
+				};
+				thread.start();
+			}
+			
 	public void setMain(Main main) {
 		this.main = main;
 	}
@@ -78,6 +159,12 @@ public class OrderController implements Initializable{
 			StringTokenizer st = new StringTokenizer(menuSeq);
 			changeMenu(st);
 		}
+	}
+	@FXML
+	public void sendAction() {
+		send(user_id+":"+input.getText()+"\n");
+		input.setText("");
+		input.requestFocus();
 	}
 
 	@FXML
@@ -207,7 +294,11 @@ public class OrderController implements Initializable{
 		nameLabellist.add(nameLabel_07);
 		nameLabellist.add(nameLabel_08);
 		nameLabellist.add(nameLabel_09);
-
+		startClient("127.0.0.1",9876);
+		Platform.runLater(()->{
+			chatArea.appendText("[ 채팅방 접속] \n");
+			input.requestFocus();
+		});
 		//welcomeLabel.setText(String.format("%s님 환영합니다", user_id));
 	}
 

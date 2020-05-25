@@ -1,8 +1,13 @@
 package controller;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -13,6 +18,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import model.Order;
 import model.OrderDAO;
@@ -36,7 +43,84 @@ public class AdminController implements Initializable{
 	private TableColumn<OrderList, String> count;
 	@FXML
 	private Button sell;
+	@FXML
+	private TextArea chatArea;
+	@FXML
+	private TextField input;
+	Socket socket;
 	
+	
+	//클라이언트 프로그램 동작 메소드
+		public void startClient(String IP, int port) {
+			
+			Thread thread = new Thread() {
+				public void run() {
+					try {
+						socket = new Socket(IP,port);
+						receive();
+					}
+					catch(Exception e) {
+						if(!socket.isClosed()) {
+							stopClient();
+							System.out.println("[서버 접속 실패]");
+							Platform.exit();
+						}
+					}
+				}
+			};
+			thread.start();
+		}
+		
+		//클라이언트 종료 메소드
+		public void stopClient() {
+			try {
+				if(socket != null && !socket.isClosed()) {
+					socket.close();
+				}
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		//서버로부터 메세지를 전달받는 메소드
+		public void receive() {
+			while(true) {
+				try {
+					InputStream in = socket.getInputStream();
+					byte[] buffer = new byte[512];
+					int length = in.read(buffer);
+					if(length == -1 ) throw new IOException();
+					String message = new String(buffer,0,length,"UTF-8");
+					Platform.runLater(()->{
+						chatArea.appendText(message);
+					});
+				}
+				catch(Exception e) {
+					stopClient();
+					break;
+				}
+			}
+		}
+		
+		//서버로 메세지를 전송
+		public void send(String message) {
+			Thread thread = new Thread() {
+				public void run() {
+					try {
+						OutputStream out = socket.getOutputStream();
+						byte[] buffer = message.getBytes("UTF-8");
+						out.write(buffer);
+						out.flush();
+					}
+					catch(Exception e) {
+						stopClient();
+					}
+				}
+			};
+			thread.start();
+		}
+		
 	private Main main;
 	OrderDAO orderDAO = new OrderDAO();
 	public void setMain(Main main) {
@@ -78,8 +162,13 @@ public class AdminController implements Initializable{
 	     }
 	         
 	}
+	
+	
 	@FXML
 	private void sendAction() {
+		send("admin"+":"+input.getText()+"\n");
+		input.setText("");
+		input.requestFocus();
 		
 	}
 	@FXML
@@ -107,6 +196,11 @@ public class AdminController implements Initializable{
 		this.menuName.setCellValueFactory(cellData -> cellData.getValue().getMenuNameProperty());
 		this.count.setCellValueFactory(cellData -> cellData.getValue().getCountProperty());
 		this.price.setCellValueFactory(cellData-> cellData.getValue().getPriceProperty());
-		//
+		
+		startClient("127.0.0.1",9876);
+		Platform.runLater(()->{
+			chatArea.appendText("[ 채팅방 접속] \n");
+			input.requestFocus();
+		});
 	}
 }
