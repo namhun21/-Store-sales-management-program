@@ -33,7 +33,7 @@ public class LoginController {
 		this.dialogStage = dialogStage;
 	}
 	@FXML
-	private void loginAction() {
+	private void loginAction() { //로그인 버튼 눌렀을때 db에서 회원의 정보 검색 is_admin이 0이면 사용자 1이면 관리자 화면으로 접속되도록 구현
 		if(valid()) {
 			
 			String id = idField.getText();
@@ -79,12 +79,12 @@ public class LoginController {
 	}
 	
 	@FXML
-	private void signupAction() {
+	private void signupAction() { //회원가입 버튼 클릭시 이동
 		Customer customer = new Customer("","","","");
 		main.setSignUpView(customer);
 	}
 	
-	private boolean valid() {
+	private boolean valid() { // id, pw 타당성 여부 확인
 		String errorMessage = "";
 		
 		if(idField.getText() == null || idField.getText().equals(""))

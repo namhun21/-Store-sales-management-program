@@ -109,12 +109,7 @@ public class SellController implements Initializable {
    }
    @FXML
    public void back(ActionEvent event) throws Exception {
-//      Parent Mains = FXMLLoader.load(getClass().getResource("../view/AdminPage.fxml"));
-//      Scene scene3 = new Scene(Mains);
-//      Stage primaryStage = (Stage) back.getScene().getWindow();
-//      primaryStage.setTitle("¿¬½À");
-//      primaryStage.setScene(scene3);
-	    
+	    this.main.orderList.clear();
 	    this.main.setAdminView();
    }
 }

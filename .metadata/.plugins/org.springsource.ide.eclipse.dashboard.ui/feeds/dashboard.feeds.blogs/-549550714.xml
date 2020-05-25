@@ -5,7 +5,378 @@
   <link rel="self" href="https://spring.io/blog.atom" />
   <id>http://spring.io/blog.atom</id>
   <icon>https://spring.io/favicon.ico</icon>
-  <updated>2020-05-19T21:56:46Z</updated>
+  <updated>2020-05-25T00:00:00Z</updated>
+  <entry>
+    <title>Getting Started With RSocket: Testing Spring Boot Responders</title>
+    <link rel="alternate" href="https://spring.io/blog/2020/05/25/getting-started-with-rsocket-testing-spring-boot-responders" />
+    <category term="engineering" label="Engineering" />
+    <author>
+      <name>Ben Wilcock</name>
+    </author>
+    <id>tag:spring.io,2020-05-21:4079</id>
+    <updated>2020-05-25T00:00:00Z</updated>
+    <content type="html">&lt;p&gt;&lt;strong&gt;Reading time: about 6 minutes&lt;/strong&gt;&lt;br/&gt;&lt;strong&gt;Coding time: about 15 minutes&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you&amp;rsquo;ve been following this &lt;a href="https://spring.io/blog/2020/03/02/getting-started-with-rsocket-spring-boot-server"&gt;series&lt;/a&gt;, by now, you&amp;rsquo;ll have built a Spring Boot prototype that illustrates many of the features present in &lt;a href="https://rsocket.io"&gt;RSocket&lt;/a&gt;. This code isn¡¯t production code, though; it&amp;rsquo;s a prototype, a stepping stone on your RSocket journey. For production code, I&amp;rsquo;d expect all the usual quality assurance and testing rules to apply. So in this exercise, I&amp;rsquo;ll show you how to write integration tests for RSocket responders, so you can get one step closer to production. &lt;/p&gt;
+&lt;p&gt;But first, what do I mean by integration testing? &lt;/p&gt;
+&lt;p&gt;Integration testing, in this context, means testing the communication back and forth between RSocket requesters and responders. During such a test, it¡¯s important to exercise every layer of the architecture, including the network. &lt;/p&gt;
+&lt;p&gt;But, integration testing can be more expensive than regular unit tests, precisely because you&amp;rsquo;re exercising every layer. They can take longer to run, require multiple components and layers, and can be less predictable. However, &lt;a href="https://martinfowler.com/articles/practical-test-pyramid.html#IntegrationTests"&gt;integration tests&lt;/a&gt; have other benefits, such as checking that your requesters and responders make contact with each other and communicate properly.&lt;/p&gt;
+&lt;p&gt;You¡¯ll also notice that I¡¯m skipping all other forms of testing in this tutorial. To cover every possible kind of test would need a whole book! If you&amp;rsquo;re looking for a more general introduction to testing Spring Boot applications, try &lt;a href="https://www.youtube.com/watch?v=Wpz6b8ZEgcU"&gt;this talk&lt;/a&gt; by Andy Wilkinson, or the &lt;a href="https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/reference/html/spring-boot-features.html#boot-features-testing"&gt;Spring Boot testing documentation&lt;/a&gt;, or search ¡°testing spring applications¡± online.&lt;/p&gt;
+&lt;p&gt;That&amp;rsquo;s enough background; let&amp;rsquo;s start testing! &lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;If you need to see the code, you¡¯ll find it on &lt;a href="https://github.com/benwilcock/spring-rsocket-demo"&gt;GitHub&lt;/a&gt;. If you want to catch up on the articles in the rest of the series, they¡¯re all listed on &lt;a href="https://spring.io/team/benwilcock"&gt;my page&lt;/a&gt; on the Spring website.&lt;/p&gt;
+&lt;/blockquote&gt;&lt;h2&gt;&lt;a href="#step-1-create-an-integration-test" class="anchor" name="step-1-create-an-integration-test"&gt;&lt;/a&gt;Step 1: Create An Integration Test&lt;/h2&gt;
+&lt;p&gt;In your &lt;code&gt;rsocket-server&lt;/code&gt; project, in the &lt;code&gt;/src/test/java/io/pivotal/rsocketserver/&lt;/code&gt; folder, create a new integration tests class called &lt;code&gt;RSocketClientToServerITest&lt;/code&gt;. The simplest way to do this is often inside your IDE.&lt;/p&gt;
+&lt;p&gt;The suggested naming convention is to end each integration test classname with the suffix &amp;lsquo;ITest.&amp;rsquo; The resulting filename &lt;code&gt;&amp;lt;your-class-name&amp;gt;ITest.java&lt;/code&gt; is easier to read and allows Maven to filter your integration tests ? a technique you&amp;rsquo;ll use later. Be sure to annotate your new class with &lt;code&gt;@SpringBootTest&lt;/code&gt; as follows: &lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint java"&gt;@SpringBootTest&#xD;
+public class RSocketClientToServerITest {&#xD;
+  // test code goes here&#xD;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;@SpringBootTest&lt;/code&gt; annotation allows Spring Boot to configure everything you need for your test, including RSocket. It saves a lot of time and a great deal of configuration.&lt;/p&gt;&lt;h2&gt;&lt;a href="#step-2-open-your-rsocket-connection" class="anchor" name="step-2-open-your-rsocket-connection"&gt;&lt;/a&gt;Step 2: Open Your RSocket Connection&lt;/h2&gt;
+&lt;p&gt;You can use a single RSocket connection for multiple tests by adding an &lt;code&gt;RSocketRequester&lt;/code&gt; as a global class variable like so:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint java"&gt;private static RSocketRequester requester;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Before your tests run, you must establish a working connection for this requester. The &lt;code&gt;@BeforeAll&lt;/code&gt; annotation from &lt;a href="https://junit.org/junit5/docs/current/user-guide/#writing-tests-classes-and-methods"&gt;JUnit5&lt;/a&gt; is ideal for performing these one-off setup tasks. Add the following method to your class:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint java"&gt;    @BeforeAll&#xD;
+    public static void setupOnce(@Autowired RSocketRequester.Builder builder, @Value(&amp;quot;${spring.rsocket.server.port}&amp;quot;) Integer port) {&#xD;
+        requester = builder&#xD;
+                .connectTcp(&amp;quot;localhost&amp;quot;, port)&#xD;
+                .block();&#xD;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You&amp;rsquo;ll notice that the method signature expects Spring Boot to pass a few items from the Spring application context. The &lt;code&gt;RSocketRequester.Builder&lt;/code&gt; simplifies creating the RSocket connection, and the port number of the responder is required to establish a link. The port number comes from the &lt;code&gt;spring.rsocket.server.port&lt;/code&gt; value in the &lt;code&gt;application.properties&lt;/code&gt; file.&lt;/p&gt;&lt;h2&gt;&lt;a href="#step-3-add-a-test" class="anchor" name="step-3-add-a-test"&gt;&lt;/a&gt;Step 3: Add A Test&lt;/h2&gt;
+&lt;p&gt;Now the requester is in place; you&amp;rsquo;re ready to add your first integration test. Two things happen during this test. First, a call from the requester to the responder, with a named route and data attached. And second, verification that the response received behaves exactly as expected. The code looks like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint java"&gt;     @Test&#xD;
+     public void testRequestGetsResponse() {&#xD;
+         // Send a request message (1)&#xD;
+          Mono&amp;lt;Message&amp;gt; result = requester&#xD;
+                 .route(&amp;quot;request-response&amp;quot;)&#xD;
+                 .data(new Message(&amp;quot;TEST&amp;quot;, &amp;quot;Request&amp;quot;))&#xD;
+                 .retrieveMono(Message.class);&#xD;
+ &#xD;
+        // Verify that the response message contains the expected data (2)&#xD;
+        StepVerifier&#xD;
+                  .create(result)&#xD;
+                  .consumeNextWith(message -&amp;gt; { &#xD;
+assertThat(message.getOrigin()).isEqualTo(RSocketController.SERVER); assertThat(message.getInteraction()).isEqualTo(RSocketController.RESPONSE);&#xD;
+assertThat(message.getIndex()).isEqualTo(0);})&#xD;
+                 .verifyComplete();&#xD;
+     }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In the first section (1), the route used is &lt;code&gt;&amp;quot;request-response&amp;quot;&lt;/code&gt; and the data is a new &lt;code&gt;Message&lt;/code&gt; object. The result coming from the responder ? your RSocketController ? is a &lt;code&gt;Mono&lt;/code&gt; of type Message.&lt;/p&gt;
+&lt;p&gt;In the second section (2), the &lt;a href="https://projectreactor.io/docs/core/release/reference/#_testing_a_scenario_with_stepverifier"&gt;StepVerifier&lt;/a&gt; class checks that the mono behaves as expected. In the &lt;code&gt;consumeWithNext()&lt;/code&gt; method, a function checks the returning message&amp;rsquo;s contents using &lt;a href="https://assertj.github.io/doc/#assertj-core-assertions-guide"&gt;AssertJ&amp;rsquo;s assertion methods&lt;/a&gt;. The &lt;code&gt;verifyComplete()&lt;/code&gt; method ensures that the interaction completes as expected.&lt;/p&gt;
+&lt;p&gt;Testing the other interactions is done in the same way. Rather than describe the testing of every interaction type here, take a look at the complete test on &lt;a href="https://github.com/benwilcock/spring-rsocket-demo/blob/master/rsocket-server/src/test/java/io/pivotal/rsocketserver/RSocketClientToServerITest.java"&gt;GitHub&lt;/a&gt;. &lt;/p&gt;&lt;h2&gt;&lt;a href="#step-4-close-your-rsocket-connection" class="anchor" name="step-4-close-your-rsocket-connection"&gt;&lt;/a&gt;Step 4: Close Your RSocket Connection&lt;/h2&gt;
+&lt;p&gt;Once the test cycle is complete, you can close any resources that are no longer required. In this case, that means disposing of the RSocket requester. Add a method to do this, and annotate that method with &lt;code&gt;@AfterAll&lt;/code&gt; as follows:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint java"&gt;      @AfterAll&#xD;
+      public static void tearDownOnce() {&#xD;
+          requester.rsocket().dispose();&#xD;
+      }
+&lt;/code&gt;&lt;/pre&gt;&lt;h2&gt;&lt;a href="#step-5-configure-failsafe" class="anchor" name="step-5-configure-failsafe"&gt;&lt;/a&gt;Step 5: Configure Failsafe&lt;/h2&gt;
+&lt;p&gt;It can take a while to run integration tests, and they can fail for unexpected reasons, like when the network is down. So, it makes sense to isolate your integration tests so you can run them selectively. Maven uses the &lt;a href="https://maven.apache.org/surefire/maven-failsafe-plugin/faq.html#surefire-v-failsafe"&gt;Failsafe plugin&lt;/a&gt; to achieve this.&lt;/p&gt;
+&lt;p&gt;To configure failsafe, in your &lt;code&gt;pom.xml&lt;/code&gt;, add the plugin configuration below. This configuration tells Maven to use failsafe to run all the tests that end with the suffix &amp;lsquo;ITest.java.&amp;rsquo; It also tells Maven to run these tests as part of the &lt;code&gt;integration-test&lt;/code&gt; or &lt;code&gt;verify&lt;/code&gt; lifecycle phases.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint xml"&gt;&amp;lt;plugins&amp;gt;&#xD;
+&amp;lt;!-- other plugins --&amp;gt;&#xD;
+      &amp;lt;plugin&amp;gt;&#xD;
+        &amp;lt;groupId&amp;gt;org.apache.maven.plugins&amp;lt;/groupId&amp;gt;&#xD;
+        &amp;lt;artifactId&amp;gt;maven-failsafe-plugin&amp;lt;/artifactId&amp;gt;&#xD;
+        &amp;lt;version&amp;gt;2.22.0&amp;lt;/version&amp;gt;&#xD;
+        &amp;lt;executions&amp;gt;&#xD;
+          &amp;lt;execution&amp;gt;&#xD;
+            &amp;lt;goals&amp;gt;&#xD;
+              &amp;lt;goal&amp;gt;integration-test&amp;lt;/goal&amp;gt;&#xD;
+              &amp;lt;goal&amp;gt;verify&amp;lt;/goal&amp;gt;&#xD;
+            &amp;lt;/goals&amp;gt;&#xD;
+          &amp;lt;/execution&amp;gt;&#xD;
+        &amp;lt;/executions&amp;gt;&#xD;
+        &amp;lt;configuration&amp;gt;&#xD;
+          &amp;lt;includes&amp;gt;**/*ITest.java&amp;lt;/includes&amp;gt;&#xD;
+        &amp;lt;/configuration&amp;gt;&#xD;
+      &amp;lt;/plugin&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You&amp;rsquo;ll also want to prevent the integration tests from running alongside your regular unit tests, so add the following surefire configuration to exclude them:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint xml"&gt;      &amp;lt;plugin&amp;gt;&#xD;
+        &amp;lt;groupId&amp;gt;org.apache.maven.plugins&amp;lt;/groupId&amp;gt;&#xD;
+        &amp;lt;artifactId&amp;gt;maven-surefire-plugin&amp;lt;/artifactId&amp;gt;&#xD;
+        &amp;lt;configuration&amp;gt;&#xD;
+          &amp;lt;excludes&amp;gt;&#xD;
+            &amp;lt;exclude&amp;gt;**/*ITest.java&amp;lt;/exclude&amp;gt;&#xD;
+          &amp;lt;/excludes&amp;gt;&#xD;
+        &amp;lt;/configuration&amp;gt;&#xD;
+      &amp;lt;/plugin&amp;gt;&#xD;
+&amp;lt;!-- other plugins --&amp;gt;&#xD;
+&amp;lt;/plugins&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h2&gt;&lt;a href="#step-6-run-your-test" class="anchor" name="step-6-run-your-test"&gt;&lt;/a&gt;Step 6: Run Your Test&lt;/h2&gt;
+&lt;p&gt;You can now run your integration test in the terminal console. Maven uses the &lt;code&gt;integration-test&lt;/code&gt; goal for this purpose. &lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint bash"&gt;./mvnw clean integration-test
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Maven now runs your integration tests, and the results appear in the console.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint bash"&gt;[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.582 s - in io.pivotal.rsocketserver.RSocketClientToServerITest&#xD;
+2020-05-19 10:43:27.512 INFO 39250 --- [extShutdownHook] i.p.rsocketserver.RSocketController : Detaching all remaining clients...&#xD;
+2020-05-19 10:43:27.513 INFO 39250 --- [extShutdownHook] i.p.rsocketserver.RSocketController : Shutting down.&#xD;
+[INFO]&#xD;
+[INFO] Results:&#xD;
+[INFO]&#xD;
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0&#xD;
+[INFO]&#xD;
+[INFO] ------------------------------------------------------------------------&#xD;
+[INFO] BUILD SUCCESS&#xD;
+[INFO] ------------------------------------------------------------------------
+&lt;/code&gt;&lt;/pre&gt;&lt;h2&gt;&lt;a href="#there-rsquo-s-more" class="anchor" name="there-rsquo-s-more"&gt;&lt;/a&gt;There&amp;rsquo;s More!&lt;/h2&gt;
+&lt;p&gt;You can also integration test your client-side responders. The code required is slightly more complicated than the code above. Mostly, this involves creating a fake requester component that contains similar &lt;code&gt;StepVerifier&lt;/code&gt; tests to the ones you&amp;rsquo;ve seen here. Rather than describe the code line by line, I&amp;rsquo;d encourage you to take a look at the &lt;a href="https://github.com/benwilcock/spring-rsocket-demo/blob/master/rsocket-client/src/test/java/io/pivotal/rsocketclient/RSocketServerToClientITest.java"&gt;source code&lt;/a&gt; instead. &lt;/p&gt;&lt;h2&gt;&lt;a href="#final-thoughts" class="anchor" name="final-thoughts"&gt;&lt;/a&gt;Final Thoughts&lt;/h2&gt;
+&lt;p&gt;Integration testing is a critical component on the path to production. By testing your RSocket responders in this way, you can prevent regressions, check components are communicating properly, and hand them over to your customers with greater confidence.&lt;/p&gt;
+&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
+  </entry>
+  <entry>
+    <title>A Bootiful Podcast: JAXB contributor, COM4j, Jenkins and Launchable founder Kohsuke Kawaguchi</title>
+    <link rel="alternate" href="https://spring.io/blog/2020/05/21/a-bootiful-podcast-jaxb-contributor-com4j-jenkins-and-launchable-founder-kohsuke-kawaguchi" />
+    <category term="engineering" label="Engineering" />
+    <author>
+      <name>Josh Long</name>
+    </author>
+    <id>tag:spring.io,2020-05-21:4080</id>
+    <updated>2020-05-21T23:01:00Z</updated>
+    <content type="html">&lt;p&gt;Hi Spring fans! In today&amp;rsquo;s installment &lt;a href="http://twitter.com/starbuxman"&gt;Josh Long (@starbuxman)&lt;/a&gt; talks to &lt;a href="http://twitter.com/kohsukekawa"&gt;Kohsuke Kawaguchi (@kohsukekawa)&lt;/a&gt; who needs no introduction - one of the original contributors to JAXB, COM4J, and a host of all sorts of other projects, and is the founder &lt;a href="https://launchableinc.com/"&gt;and CEO of Launchable&lt;/a&gt;. Oh, did I mention he also created &lt;a href="https://www.jenkins.io/"&gt;Jenkins&lt;/a&gt;, the most popular CI server ever? Enjoy!&lt;/p&gt;
+&lt;iframe title="Jenkins founder and Launchable founder Kohsuke Kawaguchi" src="https://www.podbean.com/media/player/a76cw-dd45aa?from=usersite&amp;vjs=1&amp;skin=1&amp;fonts=Helvetica&amp;auto=0&amp;download=1" height="315" width="100%" style="border: none;" scrolling="no" data-name="pb-iframe-player"&gt;&lt;/iframe&gt;
+&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
+  </entry>
+  <entry>
+    <title>Migrating to Spring Data JDBC 2.0</title>
+    <link rel="alternate" href="https://spring.io/blog/2020/05/20/migrating-to-spring-data-jdbc-2-0" />
+    <category term="engineering" label="Engineering" />
+    <author>
+      <name>Jens Schauder</name>
+    </author>
+    <id>tag:spring.io,2020-05-15:4074</id>
+    <updated>2020-05-20T16:06:44Z</updated>
+    <content type="html">&lt;div class="paragraph"&gt;
+&lt;p&gt;With Spring Data JDBC 2.0, we had to introduce some breaking changes.
+The goal of this article is to help in the migration process.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="sect1"&gt;
+&lt;h2 id="tldr"&gt;&lt;a class="anchor" href="#tldr"&gt;&lt;/a&gt;TL;DR&lt;/h2&gt;
+&lt;div class="sectionbody"&gt;
+&lt;div class="olist arabic"&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;
+&lt;p&gt;Use the default letter casing for custom column and table names or quote the names for table generation exactly as used in the annotations.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Use &lt;code&gt;AbstractJdbcConfiguration&lt;/code&gt; for custom configuration of the application context.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://stackoverflow.com/a/61854586/66686"&gt;Register a &lt;code&gt;Dialect&lt;/code&gt; if necessary&lt;/a&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Review event-handling code and ensure the data you try to use is not &lt;code&gt;null&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="sect1"&gt;
+&lt;h2 id="quoting-of-identifiers"&gt;&lt;a class="anchor" href="#quoting-of-identifiers"&gt;&lt;/a&gt;Quoting of Identifiers&lt;/h2&gt;
+&lt;div class="sectionbody"&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;Spring Data JDBC 1.x uses table and column names mostly without changing them.
+This causes problems when you use an SQL key word as a property or entity name or when you tried to use some special character in a column name.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;For this reason Spring Data JDBC 2.0 quotes all identifiers by default.
+This makes the names case-sensitive, at least for most databases.
+Since we also, by default, convert the names generated into the default letter casing used by the database, this should not cause any problems, assuming you used no quotes in the &lt;code&gt;CREATE TABLE&lt;/code&gt; statements, as most people do.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;For example, consider a &lt;code&gt;Student&lt;/code&gt; entity, as follows:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="exampleblock"&gt;
+&lt;div class="content"&gt;
+&lt;div class="listingblock"&gt;
+&lt;div class="content"&gt;
+&lt;pre class="prettyprint highlight"&gt;&lt;code class="language-java" data-lang="java"&gt;class Student {
+
+    @Id
+    Long id;
+    String name;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;A matching table for H2 could look like this:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="exampleblock"&gt;
+&lt;div class="content"&gt;
+&lt;div class="listingblock"&gt;
+&lt;div class="content"&gt;
+&lt;pre class="prettyprint highlight"&gt;&lt;code class="language-sql" data-lang="sql"&gt;CREATE TABLE STUDENT
+(
+    ID SERIAL PRIMARY KEY,
+    NAME  VARCHAR(30)
+);&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;That example is the same as in previous versions of Spring Data JDBC.
+Things change when you specify column or table names explicitly with &lt;code&gt;@Column&lt;/code&gt;, &lt;code&gt;@Table&lt;/code&gt;, or &lt;code&gt;@MappedCollection&lt;/code&gt;.
+In this case, we assume that you specify the name exactly as you want it to be used and, therefore, the table definition has to use quoted identifiers or the names have to use the default letter casing of your database, as in this modified student example:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="exampleblock"&gt;
+&lt;div class="content"&gt;
+&lt;div class="listingblock"&gt;
+&lt;div class="content"&gt;
+&lt;pre class="prettyprint highlight"&gt;&lt;code class="language-java" data-lang="java"&gt;@Table("student")
+class Student {
+
+    @Id
+    Long id;
+    @Column("LAST_NAME")
+    String name;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;A matching table for H2 could look like this:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="exampleblock"&gt;
+&lt;div class="content"&gt;
+&lt;div class="listingblock"&gt;
+&lt;div class="content"&gt;
+&lt;pre class="prettyprint highlight"&gt;&lt;code class="language-sql" data-lang="sql"&gt;CREATE TABLE "student" -- &lt;b class="conum"&gt;(1)&lt;/b&gt;
+(
+    ID SERIAL PRIMARY KEY,
+    LAST_NAME  VARCHAR(30) -- &lt;b class="conum"&gt;(2)&lt;/b&gt;
+);&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="colist arabic"&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;The table name must be quoted, because it is given in lower-case letters but H2 converts unquoted SQL identifiers to upper case by default.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;LAST_NAME&lt;/code&gt; does not have to get quoted because it already uses the default letter casing.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;See below how to disable the forced quoting if you really want to.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="sect1"&gt;
+&lt;h2 id="configuration"&gt;&lt;a class="anchor" href="#configuration"&gt;&lt;/a&gt;Configuration&lt;/h2&gt;
+&lt;div class="sectionbody"&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;If you need custom configuration of your &lt;code&gt;ApplicationContext&lt;/code&gt;, it is probably easiest to inherit from
+&lt;a href="https://docs.spring.io/spring-data/jdbc/docs/2.0.0.RELEASE/api/org/springframework/data/jdbc/repository/config/AbstractJdbcConfiguration.html"&gt;&lt;code&gt;org.springframework.data.jdbc.repository.config.AbstractJdbcConfiguration&lt;/code&gt;&lt;/a&gt;.
+Other classes with similar names and the same purpose have been removed.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;In a configuration inherited from &lt;code&gt;AbstractJdbcConfiguration&lt;/code&gt; you may override for example &lt;code&gt;jdbcMappingContext&lt;/code&gt; as follows in order to disable the forced quoting of SQL identifiers.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="exampleblock"&gt;
+&lt;div class="content"&gt;
+&lt;div class="listingblock"&gt;
+&lt;div class="content"&gt;
+&lt;pre class="prettyprint highlight"&gt;&lt;code class="language-java" data-lang="java"&gt;@Bean
+@Override
+public JdbcMappingContext jdbcMappingContext(Optional&amp;lt;NamingStrategy&amp;gt; namingStrategy, JdbcCustomConversions customConversions) {
+
+	JdbcMappingContext mappingContext = super.jdbcMappingContext(namingStrategy, customConversions);
+  mappingContext.setForceQuote(false);
+
+	return mappingContext;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="sect1"&gt;
+&lt;h2 id="aggregatechange-and-dbaction-are-immutable"&gt;&lt;a class="anchor" href="#aggregatechange-and-dbaction-are-immutable"&gt;&lt;/a&gt;&lt;code&gt;AggregateChange&lt;/code&gt; and &lt;code&gt;DbAction&lt;/code&gt; are immutable&lt;/h2&gt;
+&lt;div class="sectionbody"&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;You might have encountered these in event handlers or callback methods.
+They have been mutable in the past, but that was almost impossible to use in a meaningful way.
+Also, it was actually impossible to support in a stable way.
+Therefore, it was removed without replacement.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;If you had a use case where you actually changed those instances, please create an issue in our issue tracker.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="sect1"&gt;
+&lt;h2 id="dialects"&gt;&lt;a class="anchor" href="#dialects"&gt;&lt;/a&gt;Dialects&lt;/h2&gt;
+&lt;div class="sectionbody"&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;Spring Data JDBC now has a
+&lt;a href="https://docs.spring.io/spring-data/jdbc/docs/2.0.0.RELEASE/api/org/springframework/data/relational/core/dialect/Dialect.html"&gt;&lt;code&gt;Dialect&lt;/code&gt;&lt;/a&gt;
+interface and for the fully supported databases it ships with a matching implementation.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;If you use a different database you&amp;#8217;ll have to&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="olist arabic"&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;
+&lt;p&gt;implement your own &lt;code&gt;Dialect&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;implement a &lt;a href="https://docs.spring.io/spring-data/jdbc/docs/2.0.0.RELEASE/api/org/springframework/data/jdbc/repository/config/DialectResolver.JdbcDialectProvider.html"&gt;&lt;code&gt;JdbcDialectProvider&lt;/code&gt;&lt;/a&gt; returning that &lt;code&gt;Dialect&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;register the provider by putting a file &lt;code&gt;spring.factories&lt;/code&gt; in the &lt;code&gt;META-INF&lt;/code&gt; folder of your class path and add the line &lt;code&gt;org.springframework.data.jdbc.repository.config.DialectResolver$JdbcDialectProvider=&amp;lt;fully qualified name of your JdbcDialectProvider&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;Someone already wrote a &lt;a href="https://stackoverflow.com/a/61854586/66686"&gt;great answer on Stack Overflow&lt;/a&gt; how to do that before we could get this article out the door.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="sect1"&gt;
+&lt;h2 id="streamlined-events"&gt;&lt;a class="anchor" href="#streamlined-events"&gt;&lt;/a&gt;Streamlined events&lt;/h2&gt;
+&lt;div class="sectionbody"&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;Events only offer the ID of an entity if there is no entity available (for example, for delete events).
+If there is an entity available in the event, the ID is not in order, to avoid looking up values that then might not be used.
+Events that before used &lt;code&gt;Optional&lt;/code&gt; values now use nullable values.
+Therefore, you should review your event listeners carefully.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
+  </entry>
+  <entry>
+    <title>Spring Cloud Data Flow 2.5.1 Released</title>
+    <link rel="alternate" href="https://spring.io/blog/2020/05/20/spring-cloud-data-flow-2-5-1-released" />
+    <category term="releases" label="Releases" />
+    <author>
+      <name>Janne Valkealahti</name>
+    </author>
+    <id>tag:spring.io,2020-05-20:4078</id>
+    <updated>2020-05-20T09:08:50Z</updated>
+    <content type="html">&lt;p&gt;Spring Cloud Data Flow team is pleased to announce the release of 2.5.1.&lt;/p&gt;
+&lt;p&gt;This release includes some bug fixes with the some of the notable changes as follows:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;DeploymentProperties parsing fixes.&lt;/li&gt;
+  &lt;li&gt;Removed behaviour for server to attempt to contact dockerhub during a start.&lt;/li&gt;
+  &lt;li&gt;Fixes to dataflow client to re-authorize when oauth client credentials are used.&lt;/li&gt;
+  &lt;li&gt;Liveness and readiness probe changes to kubernetes deployment files.&lt;/li&gt;
+  &lt;li&gt;Upgrades to &lt;code&gt;Spring Boot 2.2.7&lt;/code&gt; and &lt;code&gt;Spring Cloud Hoxton.SR4&lt;/code&gt;. New dependencies from these fixed an issue in &lt;code&gt;Spring Data Rest&lt;/code&gt; which caused repository mappings &lt;a href="https://jira.spring.io/browse/DATAREST-1502"&gt;DATAREST-1502&lt;/a&gt; to stop working and effectively caused UI and Skipper to start behaving erratically in &lt;code&gt;Data Flow 2.5.0&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;&lt;h2&gt;&lt;a href="#stay-in-touch-hellip" class="anchor" name="stay-in-touch-hellip"&gt;&lt;/a&gt;Stay in touch&amp;hellip;&lt;/h2&gt;
+&lt;p&gt;As always, we welcome feedback and contributions, so please reach out to us on &lt;a href="https://stackoverflow.com/questions/tagged/spring-cloud-dataflow"&gt;Stack Overflow&lt;/a&gt; or &lt;a href="https://github.com/spring-cloud/spring-cloud-dataflow/issues"&gt;GitHub&lt;/a&gt; or via &lt;a href="https://gitter.im/spring-cloud/spring-cloud-dataflow"&gt;Gitter&lt;/a&gt;.&lt;/p&gt;
+&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
+  </entry>
   <entry>
     <title>This Week in Spring - May 19th, 2020</title>
     <link rel="alternate" href="https://spring.io/blog/2020/05/19/this-week-in-spring-may-19th-2020" />
@@ -489,8 +860,8 @@ public class Person implements Persistable&amp;lt;Long&amp;gt; {
     </author>
     <id>tag:spring.io,2020-05-14:4073</id>
     <updated>2020-05-14T22:24:00Z</updated>
-    <content type="html">&lt;p&gt;Hi, Spring fans! In this episode, VMware¡¯s &lt;a href="http://twitter.com/Starbuxman"&gt;Josh Long (@starbuxman)&lt;/a&gt; talks to VMWare COO &lt;a href="http://twitter.com/Spoonen"&gt;Sanjay Poonen (@spoonen)&lt;/a&gt; about app development, Tanzu, Cloud, Networking, and more.&lt;/p&gt;
-&lt;iframe title="VMWare COO Sanjay Poonen" src="https://www.podbean.com/media/player/n9mva-dc7ac0?from=usersite&amp;vjs=1&amp;skin=1&amp;fonts=Helvetica&amp;auto=0&amp;download=1" height="315" width="100%" style="border: none;" scrolling="no" data-name="pb-iframe-player"&gt;&lt;/iframe&gt;
+    <content type="html">&lt;p&gt;Hi, Spring fans! In this episode, VMware¡¯s &lt;a href="http://twitter.com/Starbuxman"&gt;Josh Long (@starbuxman)&lt;/a&gt; talks to VMware COO &lt;a href="http://twitter.com/Spoonen"&gt;Sanjay Poonen (@spoonen)&lt;/a&gt; about app development, Tanzu, Cloud, Networking, and more.&lt;/p&gt;
+&lt;iframe title="VMware COO Sanjay Poonen" src="https://www.podbean.com/media/player/n9mva-dc7ac0?from=usersite&amp;vjs=1&amp;skin=1&amp;fonts=Helvetica&amp;auto=0&amp;download=1" height="315" width="100%" style="border: none;" scrolling="no" data-name="pb-iframe-player"&gt;&lt;/iframe&gt;
 &lt;!-- rendered by Sagan Renderer Service --&gt;</content>
   </entry>
   <entry>
@@ -947,7 +1318,7 @@ Client 0acc1c60-4bc4-444d-bb82-eb6b510f4168 DISCONNECTED
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;As the client connects, it&amp;rsquo;s added to the list of clients, and the console prints its client ID and the status &amp;ldquo;CONNECTED&amp;rdquo;. Then, every 5 seconds, the log shows the client&amp;rsquo;s current &amp;lsquo;free memory&amp;rsquo; reading. Finally, as the client disconnects, it&amp;rsquo;s RSocket channel&amp;rsquo;s status becomes &amp;ldquo;CLOSED&amp;rdquo; and the client is &amp;ldquo;DISCONNECTED.&amp;rdquo;&lt;/p&gt;
 &lt;p&gt;You can stop the &lt;code&gt;rsocket-server&lt;/code&gt; process by pressing &lt;code&gt;Ctrl-C&lt;/code&gt; in its terminal window.&lt;/p&gt;&lt;h2&gt;&lt;a href="#final-thoughts" class="anchor" name="final-thoughts"&gt;&lt;/a&gt;Final Thoughts&lt;/h2&gt;
-&lt;p&gt;The ability to call out to clients in is very powerful. It¡¯s ideal for all kinds of scenarios, including mobile, internet-of-things, or microservices. And because all this can happen over TCP or WebSockets, you already have all the infrastructure you need without resorting to heavyweight solutions like message brokers. &lt;/p&gt;
+&lt;p&gt;The ability to call out to clients is very powerful. It¡¯s ideal for all kinds of scenarios, including mobile, internet-of-things, or microservices. And because all this can happen over TCP or WebSockets, you already have all the infrastructure you need without resorting to heavyweight solutions like message brokers. &lt;/p&gt;
 &lt;p&gt;You covered a lot of ground here. You learned how to turn servers into &amp;lsquo;requesters&amp;rsquo; and clients into &amp;lsquo;responders.&amp;rsquo; You discovered how to listen into connection events. You also learned a little bit about how to handle errors and events coming from rsocket connections. And, although in this exercise, you chose &amp;lsquo;request-stream&amp;rsquo; as your server-client communication, you could use any of the four RSocket interaction modes, depending on your needs. &lt;/p&gt;
 &lt;!-- rendered by Sagan Renderer Service --&gt;</content>
   </entry>
@@ -1113,176 +1484,6 @@ https://wavefront.surf/us/example
 &lt;p&gt;The single-use login URL is provided every time you start the application. If you don¡¯t have access to the logs of your web application, you can expose the wavefront Actuator endpoint and head over &lt;code&gt;/actuator/wavefront&lt;/code&gt; and you¡¯ll be redirected to your Wavefront dashboard.&lt;/p&gt;
 &lt;p&gt;If you are interested in testing distributed tracing, adding Spring Cloud Sleuth (also available from start.spring.io) lets you emit traces automatically to Wavefront. You can find these in &lt;code&gt;Application &amp;gt; Traces&lt;/code&gt; in your Wavefront dashboard. The Tanzu Observability platform supports other flavors of distributed tracing as well. To learn more about it, check out the &lt;a href="https://docs.wavefront.com/tracing_basics.html"&gt;documentation&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;The Wavefront Spring Boot starter is in the release candidate phase and we¡¯d love to hear from you. Head over &lt;a href="https://start.spring.io"&gt;https://start.spring.io&lt;/a&gt;, create a new project with Wavefront and Spring Boot 2.3 and &lt;a href="https://github.com/wavefrontHQ/wavefront-spring-boot/issues"&gt;let us know&lt;/a&gt; if you find any problem.&lt;/p&gt;
-&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
-  </entry>
-  <entry>
-    <title>Spring Security 5.4.0-M1 Released</title>
-    <link rel="alternate" href="https://spring.io/blog/2020/05/07/spring-security-5-4-0-m1-released" />
-    <category term="releases" label="Releases" />
-    <author>
-      <name>Eleftheria Stein-Kousathana</name>
-    </author>
-    <id>tag:spring.io,2020-05-07:4061</id>
-    <updated>2020-05-07T17:02:26Z</updated>
-    <content type="html">&lt;div class="paragraph"&gt;
-&lt;p&gt;On behalf of the community, I¡¯m pleased to announce the release of
-Spring Security 5.4.0-M1! You can find the complete details in the &lt;a href="https://github.com/spring-projects/spring-security/releases/tag/5.4.0-M1"&gt;release notes&lt;/a&gt; and the highlights below:&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="sect1"&gt;
-&lt;h2 id="oauth-2-0"&gt;&lt;a class="anchor" href="#oauth-2-0"&gt;&lt;/a&gt;OAuth 2.0&lt;/h2&gt;
-&lt;div class="sectionbody"&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8185-resource-server-configurers-pick-up-a-jwtauthenticationconverter-bean"&gt;&lt;a class="anchor" href="#gh-8185-resource-server-configurers-pick-up-a-jwtauthenticationconverter-bean"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8185"&gt;gh-8185&lt;/a&gt; - Resource Server configurers pick up a JwtAuthenticationConverter bean&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8324-configure-authoritiesmapper-in-reactive-oauth2login"&gt;&lt;a class="anchor" href="#gh-8324-configure-authoritiesmapper-in-reactive-oauth2login"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8324"&gt;gh-8324&lt;/a&gt; - Configure AuthoritiesMapper in Reactive OAuth2Login&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8324-validate-id-token-issuer"&gt;&lt;a class="anchor" href="#gh-8324-validate-id-token-issuer"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8321"&gt;gh-8324&lt;/a&gt; - Validate ID Token Issuer&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8337-allow-custom-header-during-bearer-token-extraction"&gt;&lt;a class="anchor" href="#gh-8337-allow-custom-header-during-bearer-token-extraction"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8337"&gt;gh-8337&lt;/a&gt; - Allow custom header during bearer token extraction&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8332-provide-possibility-to-use-custom-cache-to-store-jwk-set"&gt;&lt;a class="anchor" href="#gh-8332-provide-possibility-to-use-custom-cache-to-store-jwk-set"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/pull/8332"&gt;gh-8332&lt;/a&gt; - Provide possibility to use custom cache to store JWK Set&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class="sect1"&gt;
-&lt;h2 id="web"&gt;&lt;a class="anchor" href="#web"&gt;&lt;/a&gt;Web&lt;/h2&gt;
-&lt;div class="sectionbody"&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8033-add-server-request-cache-that-uses-cookie"&gt;&lt;a class="anchor" href="#gh-8033-add-server-request-cache-that-uses-cookie"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8033"&gt;gh-8033&lt;/a&gt; - Add server request cache that uses cookie&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-2693-transfer-sessions-max-inactive-interval-in-sessionfixationprotectionstrategy"&gt;&lt;a class="anchor" href="#gh-2693-transfer-sessions-max-inactive-interval-in-sessionfixationprotectionstrategy"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/2693"&gt;gh-2693&lt;/a&gt; - Transfer session&amp;#8217;s max inactive interval in SessionFixationProtectionStrategy&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-4183-switchuserfilter-vulnerable-to-csrf"&gt;&lt;a class="anchor" href="#gh-4183-switchuserfilter-vulnerable-to-csrf"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/4183"&gt;gh-4183&lt;/a&gt; - SwitchUserFilter vulnerable to CSRF&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class="sect1"&gt;
-&lt;h2 id="docs"&gt;&lt;a class="anchor" href="#docs"&gt;&lt;/a&gt;Docs&lt;/h2&gt;
-&lt;div class="sectionbody"&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8391-documented-dependencies-for-opaque-resource-server"&gt;&lt;a class="anchor" href="#gh-8391-documented-dependencies-for-opaque-resource-server"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8391"&gt;gh-8391&lt;/a&gt; - Documented dependencies for opaque Resource Server&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8182-add-figures-to-resource-server-docs"&gt;&lt;a class="anchor" href="#gh-8182-add-figures-to-resource-server-docs"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8182"&gt;gh-8182&lt;/a&gt; - Add Figures to Resource Server Docs&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8110-gh-8077-and-gh-8074-document-oauth-2-0-xml-support"&gt;&lt;a class="anchor" href="#gh-8110-gh-8077-and-gh-8074-document-oauth-2-0-xml-support"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8110"&gt;gh-8110&lt;/a&gt;, &lt;a href="https://github.com/spring-projects/spring-security/issues/8077"&gt;gh-8077&lt;/a&gt; and &lt;a href="https://github.com/spring-projects/spring-security/issues/8074"&gt;gh-8074&lt;/a&gt; - Document OAuth 2.0 XML support&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8050-add-oauth-2-0-test-support-docs"&gt;&lt;a class="anchor" href="#gh-8050-add-oauth-2-0-test-support-docs"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8050"&gt;gh-8050&lt;/a&gt; - Add OAuth 2.0 Test Support Docs&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class="sect1"&gt;
-&lt;h2 id="kotlin"&gt;&lt;a class="anchor" href="#kotlin"&gt;&lt;/a&gt;Kotlin&lt;/h2&gt;
-&lt;div class="sectionbody"&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-5558-idiomatic-kotlin-dsl-for-configuring-http-security"&gt;&lt;a class="anchor" href="#gh-5558-idiomatic-kotlin-dsl-for-configuring-http-security"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/5558"&gt;gh-5558&lt;/a&gt; - Idiomatic Kotlin DSL for configuring HTTP security&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class="sect1"&gt;
-&lt;h2 id="crypto"&gt;&lt;a class="anchor" href="#crypto"&gt;&lt;/a&gt;Crypto&lt;/h2&gt;
-&lt;div class="sectionbody"&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8402-allow-creating-aesbytesencryptor-with-key"&gt;&lt;a class="anchor" href="#gh-8402-allow-creating-aesbytesencryptor-with-key"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8402"&gt;gh-8402&lt;/a&gt; - Allow creating AesBytesEncryptor with key&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class="sect1"&gt;
-&lt;h2 id="ldap"&gt;&lt;a class="anchor" href="#ldap"&gt;&lt;/a&gt;LDAP&lt;/h2&gt;
-&lt;div class="sectionbody"&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8393-flag-to-enable-searching-of-ldap-groups-on-subtrees"&gt;&lt;a class="anchor" href="#gh-8393-flag-to-enable-searching-of-ldap-groups-on-subtrees"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8393"&gt;gh-8393&lt;/a&gt; - Flag to enable searching of LDAP groups on subtrees&lt;/h5&gt;
-
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class="sect1"&gt;
-&lt;h2 id="saml"&gt;&lt;a class="anchor" href="#saml"&gt;&lt;/a&gt;SAML&lt;/h2&gt;
-&lt;div class="sectionbody"&gt;
-&lt;div class="sect4"&gt;
-&lt;h5 id="gh-8356-saml2authenticationrequestcontext-should-be-extendible"&gt;&lt;a class="anchor" href="#gh-8356-saml2authenticationrequestcontext-should-be-extendible"&gt;&lt;/a&gt;&lt;a href="https://github.com/spring-projects/spring-security/issues/8356"&gt;gh-8356&lt;/a&gt; - Saml2AuthenticationRequestContext should be extendible&lt;/h5&gt;
-&lt;div class="paragraph"&gt;
-&lt;p&gt;&lt;a href="http://projects.spring.io/spring-security/"&gt;Project Site&lt;/a&gt; |
-&lt;a href="https://docs.spring.io/spring-security/site/docs/5.4.0-M1/reference/html5/"&gt;Reference&lt;/a&gt;
-| &lt;a href="http://stackoverflow.com/questions/tagged/spring-security"&gt;Help&lt;/a&gt;&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
-  </entry>
-  <entry>
-    <title>Spring Boot 2.2.7 available now</title>
-    <link rel="alternate" href="https://spring.io/blog/2020/05/07/spring-boot-2-2-7-available-now" />
-    <category term="releases" label="Releases" />
-    <author>
-      <name>St?phane Nicoll</name>
-    </author>
-    <id>tag:spring.io,2020-05-07:4062</id>
-    <updated>2020-05-07T16:31:00Z</updated>
-    <content type="html">&lt;p&gt;On behalf of the team and everyone who has contributed, I&amp;rsquo;m happy to announce that Spring Boot 2.2.7 has been released and is now available from &lt;a href="https://repo.spring.io/release"&gt;repo.spring.io&lt;/a&gt; and Maven Central.&lt;/p&gt;
-&lt;p&gt;This release includes &lt;a href="https://github.com/spring-projects/spring-boot/releases/tag/v2.2.7.RELEASE"&gt;80 bug fixes, enhancements, documentation improvements, and dependency upgrades&lt;/a&gt;. Thanks to all those who have contributed with issue reports and pull requests.&lt;/p&gt;&lt;h3&gt;&lt;a href="#important-security-advisory" class="anchor" name="important-security-advisory"&gt;&lt;/a&gt;Important Security Advisory&lt;/h3&gt;
-&lt;p&gt;This version of Spring Boot includes a dependency upgrade to Spring Security &lt;code&gt;5.2.4.RELEASE&lt;/code&gt;. It contains fixes for &lt;a href="https://tanzu.vmware.com/security/cve-2020-5407"&gt;CVE-2020-5407&lt;/a&gt; and &lt;a href="https://tanzu.vmware.com/security/cve-2020-5408"&gt;CVE-2020-5408&lt;/a&gt;, see also &lt;a href="https://spring.io/blog/2020/05/13/cve-reports-published-for-spring-security"&gt;the official announcement&lt;/a&gt;.&lt;/p&gt;&lt;h3&gt;&lt;a href="#how-can-you-help" class="anchor" name="how-can-you-help"&gt;&lt;/a&gt;How can you help?&lt;/h3&gt;
-&lt;p&gt;If you&amp;rsquo;re interested in helping out, check out the &lt;a href="https://github.com/spring-projects/spring-boot/labels/status%3A%20ideal-for-contribution"&gt;&amp;ldquo;ideal for contribution&amp;rdquo; tag&lt;/a&gt; in the issue repository. If you have general questions, please ask on &lt;a href="http://stackoverflow.com"&gt;stackoverflow.com&lt;/a&gt; using the &lt;a href="http://stackoverflow.com/tags/spring-boot"&gt;&lt;code&gt;spring-boot&lt;/code&gt; tag&lt;/a&gt; or chat with the community on &lt;a href="https://gitter.im/spring-projects/spring-boot"&gt;Gitter&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://spring.io/projects/spring-boot/"&gt;Project Page&lt;/a&gt; | &lt;a href="https://github.com/spring-projects/spring-boot"&gt;GitHub&lt;/a&gt; | &lt;a href="https://github.com/spring-projects/spring-boot/issues"&gt;Issues&lt;/a&gt; | &lt;a href="http://docs.spring.io/spring-boot/docs/2.2.7.RELEASE/reference/html"&gt;Documentation&lt;/a&gt; | &lt;a href="http://stackoverflow.com/questions/tagged/spring-boot"&gt;Stack Overflow&lt;/a&gt; | &lt;a href="https://gitter.im/spring-projects/spring-boot"&gt;Gitter&lt;/a&gt;&lt;/p&gt;
-&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
-  </entry>
-  <entry>
-    <title>Spring Boot 2.1.14 available now</title>
-    <link rel="alternate" href="https://spring.io/blog/2020/05/07/spring-boot-2-1-14-available-now" />
-    <category term="releases" label="Releases" />
-    <author>
-      <name>St?phane Nicoll</name>
-    </author>
-    <id>tag:spring.io,2020-05-07:4063</id>
-    <updated>2020-05-07T16:08:00Z</updated>
-    <content type="html">&lt;p&gt;On behalf of the team and everyone who has contributed, I&amp;rsquo;m happy to announce that Spring Boot 2.1.14 has been released and is now available from &lt;a href="https://repo.spring.io/release"&gt;repo.spring.io&lt;/a&gt; and Maven Central.&lt;/p&gt;
-&lt;p&gt;This release includes &lt;a href="https://github.com/spring-projects/spring-boot/releases/tag/v2.1.14.RELEASE"&gt;61 bug fixes, enhancements, documentation improvements, and dependency upgrades&lt;/a&gt;. Thanks to all those who have contributed with issue reports and pull requests.&lt;/p&gt;&lt;h3&gt;&lt;a href="#important-security-advisory" class="anchor" name="important-security-advisory"&gt;&lt;/a&gt;Important Security Advisory&lt;/h3&gt;
-&lt;p&gt;This version of Spring Boot includes a dependency upgrade to Spring Security &lt;code&gt;5.1.10.RELEASE&lt;/code&gt;. It contains fixes for &lt;a href="https://tanzu.vmware.com/security/cve-2020-5407"&gt;CVE-2020-5407&lt;/a&gt; and &lt;a href="https://tanzu.vmware.com/security/cve-2020-5408"&gt;CVE-2020-5408&lt;/a&gt;, see also &lt;a href="https://spring.io/blog/2020/05/13/cve-reports-published-for-spring-security"&gt;the official announcement&lt;/a&gt;.&lt;/p&gt;&lt;h3&gt;&lt;a href="#how-can-you-help" class="anchor" name="how-can-you-help"&gt;&lt;/a&gt;How can you help?&lt;/h3&gt;
-&lt;p&gt;If you&amp;rsquo;re interested in helping out, check out the &lt;a href="https://github.com/spring-projects/spring-boot/labels/status%3A%20ideal-for-contribution"&gt;&amp;ldquo;ideal for contribution&amp;rdquo; tag&lt;/a&gt; in the issue repository. If you have general questions, please ask on &lt;a href="http://stackoverflow.com"&gt;stackoverflow.com&lt;/a&gt; using the &lt;a href="http://stackoverflow.com/tags/spring-boot"&gt;&lt;code&gt;spring-boot&lt;/code&gt; tag&lt;/a&gt; or chat with the community on &lt;a href="https://gitter.im/spring-projects/spring-boot"&gt;Gitter&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://spring.io/projects/spring-boot/"&gt;Project Page&lt;/a&gt; | &lt;a href="https://github.com/spring-projects/spring-boot"&gt;GitHub&lt;/a&gt; | &lt;a href="https://github.com/spring-projects/spring-boot/issues"&gt;Issues&lt;/a&gt; | &lt;a href="http://docs.spring.io/spring-boot/docs/2.1.14.RELEASE/reference/html"&gt;Documentation&lt;/a&gt; | &lt;a href="http://stackoverflow.com/questions/tagged/spring-boot"&gt;Stack Overflow&lt;/a&gt; | &lt;a href="https://gitter.im/spring-projects/spring-boot"&gt;Gitter&lt;/a&gt;&lt;/p&gt;
-&lt;!-- rendered by Sagan Renderer Service --&gt;</content>
-  </entry>
-  <entry>
-    <title>Spring Security 5.3.2, 5.2.4, 5.1.10, 5.0.16, 4.2.16 Released</title>
-    <link rel="alternate" href="https://spring.io/blog/2020/05/07/spring-security-5-3-2-5-2-4-5-1-10-5-0-16-4-2-16-released" />
-    <category term="releases" label="Releases" />
-    <author>
-      <name>Rob Winch</name>
-    </author>
-    <id>tag:spring.io,2020-05-06:4056</id>
-    <updated>2020-05-07T12:00:00Z</updated>
-    <content type="html">&lt;div class="paragraph"&gt;
-&lt;p&gt;&lt;strong&gt;UPDATE 2020-05-13:&lt;/strong&gt; The following versions of Spring Security address &lt;a href="https://spring.io/blog/2020/05/13/cve-reports-published-for-spring-security"&gt;CVE-2020-5407 and CVE-2020-5408&lt;/a&gt;&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="paragraph"&gt;
-&lt;p&gt;On behalf of the community, I&amp;#8217;m pleased to announce the release of Spring Security 5.3.2 (&lt;a href="https://github.com/spring-projects/spring-security/releases/tag/5.3.2.RELEASE"&gt;release notes&lt;/a&gt;),  5.2.4 (&lt;a href="https://github.com/spring-projects/spring-security/releases/tag/5.2.4.RELEASE"&gt;release notes&lt;/a&gt;), 5.1.10 (&lt;a href="https://github.com/spring-projects/spring-security/releases/tag/5.1.10.RELEASE"&gt;release notes&lt;/a&gt;) , 5.0.16 (&lt;a href="https://github.com/spring-projects/spring-security/releases/tag/5.0.16.RELEASE"&gt;release notes&lt;/a&gt;), 4.2.16 (&lt;a href="https://github.com/spring-projects/spring-security/releases/tag/4.2.16.RELEASE"&gt;release notes&lt;/a&gt;). These releases deliver bug fixes along with some minor improvements. Users are encouraged to update to the latest patch release.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="paragraph"&gt;
-&lt;p&gt;&lt;a href="http://projects.spring.io/spring-security/"&gt;Project Site&lt;/a&gt; | &lt;a href="http://docs.spring.io/spring-security/site/docs/current/reference/html5/"&gt;Reference&lt;/a&gt; | &lt;a href="http://stackoverflow.com/questions/tagged/spring-security"&gt;Help&lt;/a&gt;&lt;/p&gt;
-&lt;/div&gt;
 &lt;!-- rendered by Sagan Renderer Service --&gt;</content>
   </entry>
 </feed>

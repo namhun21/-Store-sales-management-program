@@ -45,7 +45,7 @@ public class AdminController implements Initializable{
 	
 	@FXML
 	private void manageAction() {
-		
+		this.main.setmanageView();
 	}
 	@FXML
 	private void salesAction() throws Exception {
@@ -66,8 +66,8 @@ public class AdminController implements Initializable{
 		 }
 	}
 	@FXML
-	private void completeAction() {
-		 int selectedIndex = orderList2.getSelectionModel().getSelectedIndex();
+	private void completeAction() { // 주문완료 버튼 눌렀을 때 oIsComplete를 1로 바꾸고 사용자의 누적금액에 추가하고 tableview에서 항목 제거
+		 int selectedIndex = orderList2.getSelectionModel().getSelectedIndex(); // 사용자가 누른 열번호 반환
 	     if(selectedIndex >= 0) {
 	    	 String order_id = (orderList2.getItems().get(selectedIndex).getOrderID());
 	    	 System.out.println(order_id);

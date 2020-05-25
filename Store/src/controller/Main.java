@@ -10,16 +10,18 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import model.CumaDTO;
 import model.Customer;
 import model.OrderDAO;
 import model.OrderList;
 
 
 
-public class Main extends Application{
+public class Main extends Application{ // 컨트롤러에 의해 변환되는 화면 다루기 위한 함수
 	private Stage primaryStage;
 	private AnchorPane MainFrameView;
 	public static ObservableList<OrderList> orderList = FXCollections.observableArrayList();
+	public static ObservableList<CumaDTO> Cumalist = FXCollections.observableArrayList();
 	public static String uid;
 	public Main() {
 		
@@ -28,6 +30,10 @@ public class Main extends Application{
 	
 	public ObservableList<OrderList> getOrderList() {
 		return orderList;
+	}
+	
+	public ObservableList<CumaDTO> getcumaList() {
+		return Cumalist;
 	}
 	@Override 
 	public void start(Stage primaryStage) {
@@ -55,7 +61,7 @@ public class Main extends Application{
 		}
 	}
 	
-	public void setOrderView(String id) {
+	public void setOrderView(String id) { //사용자일 경우 주문화면 보여지도록
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(Main.class.getResource("../view/OrderListPage.fxml"));
@@ -74,7 +80,7 @@ public class Main extends Application{
 		}
 		
 	}
-	public void setAdminView() {
+	public void setAdminView() { //관리자일 경우 관리자 화면 보여지도록
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(Main.class.getResource("../view/AdminPage.fxml"));
@@ -94,7 +100,7 @@ public class Main extends Application{
 		
 	}
 	
-	public void setSellView() {
+	public void setSellView() { //관리자가 매출관리 버튼을 눌렀을때 이동되는 화면
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(Main.class.getResource("../view/Sales.fxml"));
@@ -111,7 +117,28 @@ public class Main extends Application{
 			e.printStackTrace();
 		}
 	}
-	public void setSignUpView(Customer customer) {
+	
+	public void setmanageView() {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(Main.class.getResource("../view/Customer.fxml"));
+	        Parent Managebutton = loader.load();
+	        Scene scene = new Scene(Managebutton);
+	        primaryStage.setScene(scene);
+	        primaryStage.show();
+			primaryStage.setResizable(false);
+			
+			CustomerManageController controller = loader.getController();
+	        controller.setMain(this);
+	        controller.customer_view();
+	        
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	public void setSignUpView(Customer customer) { //회원가입 버튼 클릭이 이동되는 화면
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(Main.class.getResource("../view/Signup.fxml"));
