@@ -308,12 +308,6 @@ public class OrderController implements Initializable{
 			chatArea.appendText("[ 채팅방 접속] \n");
 			input.requestFocus();
 		});
-		
-		input.setOnAction(event->{
-			send(user_id+":" + input.getText() + "\n");
-			input.setText("");
-			input.requestFocus();
-		});
 		//welcomeLabel.setText(String.format("%s님 환영합니다", user_id));
 	}
 
