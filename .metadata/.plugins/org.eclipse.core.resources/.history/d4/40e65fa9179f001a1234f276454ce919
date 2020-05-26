@@ -81,10 +81,11 @@ public class MenuDAO {
 			// 디비 연결
 			conn = DriverManager.getConnection(URL, ID, PW);
 			stat = conn.createStatement();
-			rs = stat.executeQuery("select order_id from orders where ROWNUM<2 order by order_id desc");
-	         while (rs.next()) {
-	            orderID = rs.getInt("order_id") + 1;
-	         }
+			rs = stat.executeQuery("select order_id from orders");
+			while (rs.next()) {
+				if (orderID == rs.getInt("order_id"))
+					orderID++;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
