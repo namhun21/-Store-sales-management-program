@@ -1,0 +1,206 @@
+package controller;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import javafx.application.Platform;
+import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import model.Order;
+import model.OrderDAO;
+import model.OrderList;
+
+public class AdminController implements Initializable{
+	
+	public AdminController(){}
+	
+	@FXML
+	private TableView<OrderList> orderList2;
+	@FXML
+	private TableColumn<OrderList, String> orderID;
+	@FXML
+	private TableColumn<OrderList, String> userID;
+	@FXML
+	private TableColumn<OrderList, String> menuName;
+	@FXML
+	private TableColumn<OrderList, String> price;
+	@FXML
+	private TableColumn<OrderList, String> count;
+	@FXML
+	private Button sell;
+	@FXML
+	private TextArea chatArea;
+	@FXML
+	private TextField input;
+	Socket socket;
+	
+	
+	//클라이언트 프로그램 동작 메소드
+		public void startClient(String IP, int port) {
+			
+			Thread thread = new Thread() {
+				public void run() {
+					try {
+						socket = new Socket(IP,port);
+						receive();
+					}
+					catch(Exception e) {
+						if(!socket.isClosed()) {
+							stopClient();
+							System.out.println("[서버 접속 실패]");
+							Platform.exit();
+						}
+					}
+				}
+			};
+			thread.start();
+		}
+		
+		//클라이언트 종료 메소드
+		public void stopClient() {
+			try {
+				if(socket != null && !socket.isClosed()) {
+					socket.close();
+				}
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		//서버로부터 메세지를 전달받는 메소드
+		public void receive() {
+			while(true) {
+				try {
+					InputStream in = socket.getInputStream();
+					byte[] buffer = new byte[512];
+					int length = in.read(buffer);
+					if(length == -1 ) throw new IOException();
+					String message = new String(buffer,0,length,"UTF-8");
+					Platform.runLater(()->{
+						chatArea.appendText(message);
+					});
+				}
+				catch(Exception e) {
+					stopClient();
+					break;
+				}
+			}
+		}
+		
+		//서버로 메세지를 전송
+		public void send(String message) {
+			Thread thread = new Thread() {
+				public void run() {
+					try {
+						OutputStream out = socket.getOutputStream();
+						byte[] buffer = message.getBytes("UTF-8");
+						out.write(buffer);
+						out.flush();
+					}
+					catch(Exception e) {
+						stopClient();
+					}
+				}
+			};
+			thread.start();
+		}
+		
+	private Main main;
+	OrderDAO orderDAO = new OrderDAO();
+	public void setMain(Main main) {
+		this.main = main;
+	}
+	
+	@FXML
+	private void manageAction() {
+		this.main.setmanageView();
+	}
+	@FXML
+	private void salesAction() throws Exception {
+		this.main.setSellView();
+//	  Parent sell1 = FXMLLoader.load(getClass().getResource("../view/Sales.fxml"));
+//      Scene scene1 = new Scene(sell1);
+//      Stage primaryStage = (Stage) sell.getScene().getWindow();
+//      primaryStage.setTitle("연습");
+//      primaryStage.setScene(scene1);
+	}
+	@FXML
+	private void cancelAction()	{
+		 int selectedIndex = orderList2.getSelectionModel().getSelectedIndex();
+		 if(selectedIndex >= 0) {
+			 String order_id = (orderList2.getItems().get(selectedIndex).getOrderID());
+			 orderDAO.cancelOrder(order_id);
+			 orderList2.getItems().remove(selectedIndex);
+		 }
+	}
+	@FXML
+	private void completeAction() { // 주문완료 버튼 눌렀을 때 oIsComplete를 1로 바꾸고 사용자의 누적금액에 추가하고 tableview에서 항목 제거
+		 int selectedIndex = orderList2.getSelectionModel().getSelectedIndex(); // 사용자가 누른 열번호 반환
+	     if(selectedIndex >= 0) {
+	    	 String order_id = (orderList2.getItems().get(selectedIndex).getOrderID());
+	    	 System.out.println(order_id);
+	    	 orderDAO.changeOIsComplete(order_id);
+	    	 orderDAO.calculateUserSale(order_id);
+	    	 orderList2.getItems().remove(selectedIndex);
+	    	 System.out.println(main.getOrderList().size());
+	     }
+	         
+	}
+	
+	
+	@FXML
+	private void sendAction() {
+		send("admin"+":"+input.getText()+"\n");
+		input.setText("");
+		input.requestFocus();
+		
+	}
+	@FXML
+	private void lookUpAction() { // 조회버튼을 눌렀을때 새로운 주문 확인할 수 있는 메소드 
+		orderList2.getItems().clear();	
+		ObservableList<OrderList> tmpList = orderDAO.getOrderList();
+		for(int i = 0; i< tmpList.size();i++) {
+			main.orderList.add(tmpList.get(i));
+			}
+		orderList2.setItems(main.getOrderList());
+	}
+
+	public void setOrderListView(AdminController admincontroller) {  //adminview에 들어왔을때 주문목록 출력되도록 하는 함수
+		ObservableList<OrderList> tmpList = orderDAO.getOrderList();
+		for(int i = 0; i< tmpList.size();i++) {
+			main.orderList.add(tmpList.get(i));
+			}
+		orderList2.setItems(main.getOrderList());
+	}
+	
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		this.orderID.setCellValueFactory(cellData -> cellData.getValue().getOrderIDProperty());
+		this.userID.setCellValueFactory(cellData -> cellData.getValue().getUserIDProperty());
+		this.menuName.setCellValueFactory(cellData -> cellData.getValue().getMenuNameProperty());
+		this.count.setCellValueFactory(cellData -> cellData.getValue().getCountProperty());
+		this.price.setCellValueFactory(cellData-> cellData.getValue().getPriceProperty());
+		
+		startClient("127.0.0.1",9876);
+		Platform.runLater(()->{
+			chatArea.appendText("[ 채팅방 접속] \n");
+			input.requestFocus();
+		});
+	}
+}

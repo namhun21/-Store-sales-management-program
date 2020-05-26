@@ -33,6 +33,9 @@ public class CumaDTO {
    public void setuid(String uid) {
 	      this.uid.set(uid);
 	   }
+   public String getid() {
+	      return uid.get();
+	   }
    public void setsum(String sum) {
       this.sumpri.set(sum);
    }

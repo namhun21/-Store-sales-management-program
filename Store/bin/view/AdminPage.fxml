@@ -47,5 +47,6 @@
       </TableView>
       <Button layoutX="1032.0" layoutY="359.0" mnemonicParsing="false" onAction="#lookUpAction" prefHeight="44.0" prefWidth="80.0" text="주문조회" AnchorPane.leftAnchor="1032.0" />
       <Button layoutX="794.0" layoutY="359.0" mnemonicParsing="false" onAction="#cancelAction" prefHeight="44.0" prefWidth="80.0" text="주문취소" />
+      <Button layoutX="990.0" layoutY="805.0" mnemonicParsing="false" onAction="#logoutAction" prefHeight="64.0" prefWidth="125.0" text="로그아웃" />
    </children>
 </AnchorPane>

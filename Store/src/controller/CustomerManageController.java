@@ -66,9 +66,16 @@ public class CustomerManageController implements Initializable {
 	@FXML
 	private void cancleAction(ActionEvent event) {
 		int selectedIndex = viewtable.getSelectionModel().getSelectedIndex();
-		if (selectedIndex >= 0) {
-			viewtable.getItems().remove(selectedIndex);
-		}
+		cDAO = new CustoManageDAO();
+		String id = viewtable.getItems().get(selectedIndex).getid();
+		System.out.println(id);
+			try {
+				cDAO.Cus_delete(id);
+				viewtable.getItems().remove(selectedIndex);
+			}catch(Exception e){
+				e.printStackTrace();
+				System.out.println("err");
+			}
 	}
 
 //	@FXML

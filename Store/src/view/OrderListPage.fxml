@@ -150,17 +150,18 @@
                   <Button fx:id="fruitImg" layoutX="55.0" layoutY="437.0" mnemonicParsing="false" onAction="#changeCategory" text="과일주스" />
                </children>
             </Pane>
-            <Button fx:id="inputItemsButton" layoutX="1087.0" layoutY="799.0" mnemonicParsing="false" onAction="#inputItems" text="상품 담기" />
+            <Button fx:id="inputItemsButton" layoutX="1005.0" layoutY="782.0" mnemonicParsing="false" onAction="#inputItems" text="상품 담기" />
             <Label fx:id="welcomeLabel" layoutX="103.0" layoutY="41.0" text="ooo님 환영합니다.">
                <font>
                   <Font name="Ami R" size="45.0" />
                </font>
             </Label>
-            <Button layoutX="1007.0" layoutY="799.0" mnemonicParsing="false" onAction="#finish" text="삭제" />
+            <Button layoutX="1109.0" layoutY="782.0" mnemonicParsing="false" onAction="#finish" text="삭제" />
             <TextArea fx:id="chatArea" editable="false" layoutX="854.0" layoutY="113.0" opacity="0.8" prefHeight="203.0" prefWidth="332.0" />
             <TextField fx:id="input" layoutX="854.0" layoutY="324.0" opacity="0.7" prefHeight="29.0" prefWidth="255.0" />
             <Button layoutX="1118.0" layoutY="324.0" mnemonicParsing="false" onAction="#sendAction" prefHeight="29.0" prefWidth="67.0" text="전송" />
-            <Button layoutX="872.0" layoutY="799.0" mnemonicParsing="false" onAction="#historyAction" text="주문이력조회" />
+            <Button layoutX="872.0" layoutY="782.0" mnemonicParsing="false" onAction="#historyAction" text="주문이력조회" />
+            <Button layoutX="1090.0" layoutY="830.0" mnemonicParsing="false" onAction="#logoutAction" text="로그아웃" />
          </children>
       </Pane>
    </children>

@@ -147,7 +147,7 @@ assertThat(message.getIndex()).isEqualTo(0);})&#xD;
       <name>Jens Schauder</name>
     </author>
     <id>tag:spring.io,2020-05-15:4074</id>
-    <updated>2020-05-20T16:06:44Z</updated>
+    <updated>2020-05-20T16:06:00Z</updated>
     <content type="html">&lt;div class="paragraph"&gt;
 &lt;p&gt;With Spring Data JDBC 2.0, we had to introduce some breaking changes.
 The goal of this article is to help in the migration process.&lt;/p&gt;
@@ -323,7 +323,35 @@ Therefore, it was removed without replacement.&lt;/p&gt;
 interface and for the fully supported databases it ships with a matching implementation.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class="paragraph"&gt;
-&lt;p&gt;If you use a different database you&amp;#8217;ll have to&lt;/p&gt;
+&lt;p&gt;Supported databases are:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="ulist"&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;DB2&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;HSQLDB&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;H2&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;MySQL and MariaDB&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Postgres&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;SQL Server&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;Oracle support is currently &lt;a href="https://jira.spring.io/browse/DATAJDBC-256"&gt;work in progress&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="paragraph"&gt;
+&lt;p&gt;If you use a different database then your application won&amp;#8217;t startup. In that case, you&amp;#8217;ll have to&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class="olist arabic"&gt;
 &lt;ol class="arabic"&gt;

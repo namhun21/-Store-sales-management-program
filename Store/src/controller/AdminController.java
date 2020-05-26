@@ -132,6 +132,11 @@ public class AdminController implements Initializable{
 		this.main.setmanageView();
 	}
 	@FXML
+	public void logoutAction() {
+		stopClient();
+		this.main.setMainFrameView();
+	}
+	@FXML
 	private void salesAction() throws Exception {
 		this.main.setSellView();
 //	  Parent sell1 = FXMLLoader.load(getClass().getResource("../view/Sales.fxml"));

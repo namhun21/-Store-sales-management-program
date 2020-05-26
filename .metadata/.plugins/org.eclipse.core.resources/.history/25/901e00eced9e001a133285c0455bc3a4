@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="369.0" prefWidth="662.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.OrderHistoryController">
+   <children>
+      <TableView fx:id="orderHistory" layoutX="34.0" layoutY="31.0" prefHeight="251.0" prefWidth="600.0">
+        <columns>
+          <TableColumn fx:id="userID" prefWidth="120.0" resizable="false" text="고객ID" />
+          <TableColumn fx:id="date" prefWidth="120.0" resizable="false" text="날짜" />
+            <TableColumn fx:id="menuName" prefWidth="120.0" resizable="false" text="메뉴" />
+            <TableColumn fx:id="price" prefWidth="120.0" resizable="false" text="가격" />
+            <TableColumn fx:id="count" prefWidth="120.0" resizable="false" text="수량" />
+        </columns>
+      </TableView>
+      <Label layoutX="433.0" layoutY="310.0" text="누적 사용금액 :" />
+      <Label fx:id="totalPriceLabel" layoutX="567.0" layoutY="310.0" text="ooo원" />
+   </children>
+</AnchorPane>

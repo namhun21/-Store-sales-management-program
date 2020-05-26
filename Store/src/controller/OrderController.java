@@ -276,6 +276,11 @@ public class OrderController implements Initializable{
 			orderListTable.getItems().remove(selectedIndex);
 		}
 	}
+	@FXML
+	public void logoutAction() {
+		stopClient();
+		this.main.setMainFrameView();
+	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {

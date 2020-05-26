@@ -63,5 +63,32 @@ public class CustoManageDAO {
 
 		return call_info;
 	}
+	public boolean Cus_delete(String id) {
+		String sql = "DELETE FROM user_info WHERE user_id = ?";
+//		ObservableList<CumaDTO> call_info = FXCollections.observableArrayList();
+		System.out.println("시작");
+		try {
+			conn = DriverManager.getConnection(URL, ID, PW);
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1,id);
+			rs = pstmt.executeQuery();
+			
+			//pstmt = conn.prepareStatement(sql);
+			pstmt.executeUpdate();
+
+		} catch (Exception e) {
+			System.out.println("실패");
+			return false;
+			}
+//		} finally {
+//			try {
+//				rs.close();
+//				stat.close();
+//				conn.close();
+//			} catch (Exception e) {
+//			}
+//		}
+		return true;
+	}
 
 }
