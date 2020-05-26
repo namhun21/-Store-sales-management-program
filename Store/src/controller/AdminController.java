@@ -50,6 +50,7 @@ public class AdminController implements Initializable{
 	Socket socket;
 	
 	
+	
 	//클라이언트 프로그램 동작 메소드
 		public void startClient(String IP, int port) {
 			
@@ -207,7 +208,6 @@ public class AdminController implements Initializable{
 			chatArea.appendText("[ 채팅방 접속] \n");
 			input.requestFocus();
 		});
-		
 		input.setOnAction(event->{
 			send("admin:" + input.getText() + "\n");
 			input.setText("");

@@ -61,16 +61,20 @@ public class MenuDAO {
 	}
 
 	public void inputOrder(TableView<TableRowDataModel> orderListTable, String uId) {
-		int orderID = 1;
-		String userId = uId;
-		int[] menuID = checkMenuID(orderListTable);
-		SimpleDateFormat formatter = new SimpleDateFormat("yy.MM.dd");
-		String date = formatter.format(new java.util.Date());
+		int orderID = 1, menuCnt = orderListTable.getItems().size(), j = 0;
+	      int[] menuID = checkMenuID(orderListTable);
+	      SimpleDateFormat formatter = new SimpleDateFormat("yy.MM.dd");
+	      String date = formatter.format(new java.util.Date());
+	      int[] mCnt = new int[27];
+	      while (menuCnt-- > 0) {
+	         mCnt[j] = (int) orderListTable.getColumns().get(1).getCellObservableValue(j).getValue();
+	         j++;
+	      }
 
 		Statement stat = null;
 		ResultSet rs = null;
 		PreparedStatement pstmt = null;
-		String sql = "insert into orders values(?,?,?,?,1,0)";
+		String sql = "insert into orders values(?,?,?,?,?,0)";
 
 		try {
 			Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -104,6 +108,7 @@ public class MenuDAO {
 				pstmt.setString(2, uId);
 				pstmt.setInt(3, menuID[i]);
 				pstmt.setString(4, date);
+				pstmt.setInt(5, mCnt[i]);
 				int result = pstmt.executeUpdate();
 				if (result != -1) {
 					// input order table success

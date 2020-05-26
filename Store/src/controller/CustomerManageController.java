@@ -12,6 +12,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import model.CumaDTO;
 import model.CustoManageDAO;
@@ -28,6 +29,8 @@ public class CustomerManageController implements Initializable {
 	private TableColumn<CumaDTO, String> CID;
 	@FXML
 	private TableColumn<CumaDTO, String> totalprice;
+	@FXML
+	private TextField pw_change;
 	private ObservableList<CumaDTO> CUMA;
 	CustoManageDAO cDAO;
 	private Main main;
@@ -36,7 +39,14 @@ public class CustomerManageController implements Initializable {
 	public void setMain(Main main) {
 		this.main = main;
 	}
-
+	@FXML
+	   private void change_pw(ActionEvent event) {
+	      int selectedIndex = viewtable.getSelectionModel().getSelectedIndex();
+	      String id = viewtable.getItems().get(selectedIndex).getid();
+	      String pw = pw_change.getText();
+	      cDAO = new CustoManageDAO();
+	      cDAO.pw_change(pw, id);
+	      }
 	public void initialize(URL location, ResourceBundle resources) {
 		cDAO = new CustoManageDAO();
 //			customer_view();

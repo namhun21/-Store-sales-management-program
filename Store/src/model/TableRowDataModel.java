@@ -7,6 +7,14 @@ public class TableRowDataModel {
 	private StringProperty Mname;
 	private IntegerProperty Mprice;
 	private IntegerProperty Mcount;
+	
+	public void setMprice(IntegerProperty mprice) {
+	      Mprice = mprice;
+	   }
+	
+	public void setMcount(IntegerProperty mcount) {
+		Mcount = mcount;
+	}
 
 	public TableRowDataModel(StringProperty name, IntegerProperty price, IntegerProperty count) {
 		this.Mname = name;

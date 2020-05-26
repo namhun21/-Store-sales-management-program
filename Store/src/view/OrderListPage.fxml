@@ -18,6 +18,11 @@
    <children>
       <Pane prefHeight="500.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
+            <ImageView fitHeight="900.0" fitWidth="1200.0" opacity="0.6" pickOnBounds="true">
+               <image>
+                  <Image url="@../image/커피.jpg" />
+               </image>
+            </ImageView>
             <TitledPane animated="false" layoutX="854.0" layoutY="400.0" prefHeight="333.0" prefWidth="332.0" text="담은 상품 목록">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
@@ -32,13 +37,13 @@
                      </children></AnchorPane>
               </content>
             </TitledPane>
-            <ScrollPane layoutX="204.0" layoutY="113.0" prefHeight="779.0" prefWidth="640.0">
+            <ScrollPane layoutX="183.0" layoutY="113.0" prefHeight="771.0" prefWidth="663.0">
               <content>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="779.0" prefWidth="640.0">
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="768.0" prefWidth="640.0">
                      <children>
-                        <Pane layoutX="25.0" prefHeight="779.0" prefWidth="640.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="-25.0" AnchorPane.topAnchor="0.0">
+                        <Pane layoutX="22.0" prefHeight="754.0" prefWidth="640.0" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="22.0" AnchorPane.rightAnchor="-22.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <Button fx:id="btn_01" graphicTextGap="0.0" layoutX="40.0" layoutY="30.0" mnemonicParsing="false" onAction="#inputItem" prefHeight="160.0" prefWidth="170.0">
+                              <Button fx:id="btn_01" graphicTextGap="0.0" layoutX="40.0" layoutY="70.0" mnemonicParsing="false" onAction="#inputItem" prefHeight="160.0" prefWidth="170.0">
                                  <graphic>
                                     <ImageView fx:id="img_01" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -47,7 +52,7 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_02" graphicTextGap="0.0" layoutX="230.0" layoutY="30.0" mnemonicParsing="false" onAction="#inputItem" prefHeight="150.0" prefWidth="160.0">
+                              <Button fx:id="btn_02" graphicTextGap="0.0" layoutX="230.0" layoutY="70.0" mnemonicParsing="false" onAction="#inputItem" prefHeight="150.0" prefWidth="160.0">
                                  <graphic>
                                     <ImageView fx:id="img_02" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -56,7 +61,7 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_03" layoutX="420.0" layoutY="30.0" mnemonicParsing="false" onAction="#inputItem">
+                              <Button fx:id="btn_03" layoutX="420.0" layoutY="70.0" mnemonicParsing="false" onAction="#inputItem">
                                  <graphic>
                                     <ImageView fx:id="img_03" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -65,7 +70,7 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_04" graphicTextGap="0.0" layoutX="40.0" layoutY="260.0" mnemonicParsing="false" onAction="#inputItem">
+                              <Button fx:id="btn_04" graphicTextGap="0.0" layoutX="40.0" layoutY="300.0" mnemonicParsing="false" onAction="#inputItem">
                                  <graphic>
                                     <ImageView fx:id="img_04" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -74,7 +79,7 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_05" graphicTextGap="0.0" layoutX="230.0" layoutY="260.0" mnemonicParsing="false" onAction="#inputItem">
+                              <Button fx:id="btn_05" graphicTextGap="0.0" layoutX="230.0" layoutY="300.0" mnemonicParsing="false" onAction="#inputItem">
                                  <graphic>
                                     <ImageView fx:id="img_05" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -83,7 +88,7 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_06" graphicTextGap="0.0" layoutX="420.0" layoutY="260.0" mnemonicParsing="false" onAction="#inputItem">
+                              <Button fx:id="btn_06" graphicTextGap="0.0" layoutX="420.0" layoutY="300.0" mnemonicParsing="false" onAction="#inputItem">
                                  <graphic>
                                     <ImageView fx:id="img_06" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -92,16 +97,16 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_07" graphicTextGap="0.0" layoutX="40.0" layoutY="490.0" mnemonicParsing="false" onAction="#inputItem">
+                              <Button fx:id="btn_07" graphicTextGap="0.0" layoutX="40.0" layoutY="530.0" mnemonicParsing="false" onAction="#inputItem">
                                  <graphic>
-                                    <ImageView fx:id="img_07" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
+                                    <ImageView fx:id="img_07" fitHeight="150.0" fitWidth="160.0" layoutY="10.0" pickOnBounds="true">
                                        <image>
                                           <Image url="@../image/화이트카페모카.jpg" />
                                        </image>
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_08" graphicTextGap="0.0" layoutX="230.0" layoutY="490.0" mnemonicParsing="false" onAction="#inputItem">
+                              <Button fx:id="btn_08" graphicTextGap="0.0" layoutX="230.0" layoutY="530.0" mnemonicParsing="false" onAction="#inputItem">
                                  <graphic>
                                     <ImageView fx:id="img_08" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -110,7 +115,7 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Button fx:id="btn_09" graphicTextGap="0.0" layoutX="420.0" layoutY="490.0" mnemonicParsing="false" onAction="#inputItem">
+                              <Button fx:id="btn_09" graphicTextGap="0.0" layoutX="420.0" layoutY="530.0" mnemonicParsing="false" onAction="#inputItem">
                                  <graphic>
                                     <ImageView fx:id="img_09" fitHeight="150.0" fitWidth="160.0" pickOnBounds="true">
                                        <image>
@@ -119,31 +124,31 @@
                                     </ImageView>
                                  </graphic>
                               </Button>
-                              <Label fx:id="nameLabel_01" layoutX="40.0" layoutY="201.0" text="에스프레소" />
-                              <Label fx:id="priceLabel_01" layoutX="182.0" layoutY="201.0" text="2500" />
-                              <Label fx:id="nameLabel_02" layoutX="230.0" layoutY="201.0" text="아메리카노" />
-                              <Label fx:id="priceLabel_02" layoutX="372.0" layoutY="201.0" text="2500" />
-                              <Label fx:id="nameLabel_03" layoutX="420.0" layoutY="201.0" text="카페라떼" />
-                              <Label fx:id="priceLabel_03" layoutX="562.0" layoutY="201.0" text="3300" />
-                              <Label fx:id="nameLabel_04" layoutX="40.0" layoutY="436.0" text="카페모카" />
-                              <Label fx:id="priceLabel_04" layoutX="182.0" layoutY="436.0" text="3800" />
-                              <Label fx:id="nameLabel_05" layoutX="230.0" layoutY="436.0" text="카푸치노" />
-                              <Label fx:id="priceLabel_05" layoutX="372.0" layoutY="436.0" text="3500" />
-                              <Label fx:id="nameLabel_06" layoutX="420.0" layoutY="436.0" text="카라멜마끼아또" />
-                              <Label fx:id="priceLabel_06" layoutX="562.0" layoutY="436.0" text="3500" />
-                              <Label fx:id="nameLabel_07" layoutX="40.0" layoutY="665.0" text="화이트카페모카" />
-                              <Label fx:id="priceLabel_07" layoutX="182.0" layoutY="665.0" text="3800" />
-                              <Label fx:id="nameLabel_08" layoutX="230.0" layoutY="665.0" text="바닐라라떼" />
-                              <Label fx:id="priceLabel_08" layoutX="372.0" layoutY="665.0" text="3500" />
-                              <Label fx:id="nameLabel_09" layoutX="420.0" layoutY="665.0" text="아포가토" />
-                              <Label fx:id="priceLabel_09" layoutX="562.0" layoutY="665.0" text="4500" />
+                              <Label fx:id="nameLabel_01" layoutX="40.0" layoutY="240.0" text="에스프레소" />
+                              <Label fx:id="priceLabel_01" layoutX="182.0" layoutY="240.0" text="2500" />
+                              <Label fx:id="nameLabel_02" layoutX="230.0" layoutY="240.0" text="아메리카노" />
+                              <Label fx:id="priceLabel_02" layoutX="372.0" layoutY="240.0" text="2500" />
+                              <Label fx:id="nameLabel_03" layoutX="420.0" layoutY="240.0" text="카페라떼" />
+                              <Label fx:id="priceLabel_03" layoutX="562.0" layoutY="240.0" text="3300" />
+                              <Label fx:id="nameLabel_04" layoutX="40.0" layoutY="470.0" text="카페모카" />
+                              <Label fx:id="priceLabel_04" layoutX="182.0" layoutY="470.0" text="3800" />
+                              <Label fx:id="nameLabel_05" layoutX="230.0" layoutY="470.0" text="카푸치노" />
+                              <Label fx:id="priceLabel_05" layoutX="372.0" layoutY="470.0" text="3500" />
+                              <Label fx:id="nameLabel_06" layoutX="420.0" layoutY="470.0" text="카라멜마끼아또" />
+                              <Label fx:id="priceLabel_06" layoutX="562.0" layoutY="470.0" text="3500" />
+                              <Label fx:id="nameLabel_07" layoutX="40.0" layoutY="700.0" text="화이트카페모카" />
+                              <Label fx:id="priceLabel_07" layoutX="182.0" layoutY="700.0" text="3800" />
+                              <Label fx:id="nameLabel_08" layoutX="230.0" layoutY="700.0" text="바닐라라떼" />
+                              <Label fx:id="priceLabel_08" layoutX="372.0" layoutY="700.0" text="3500" />
+                              <Label fx:id="nameLabel_09" layoutX="420.0" layoutY="700.0" text="아포가토" />
+                              <Label fx:id="priceLabel_09" layoutX="562.0" layoutY="700.0" text="4500" />
                            </children>
                         </Pane>
                      </children>
                   </AnchorPane>
               </content>
             </ScrollPane>
-            <Pane layoutX="14.0" layoutY="113.0" prefHeight="646.0" prefWidth="177.0">
+            <Pane layoutX="21.0" layoutY="113.0" prefHeight="646.0" prefWidth="177.0">
                <children>
                   <Button fx:id="coffeeImg" layoutX="64.0" layoutY="69.0" mnemonicParsing="false" onAction="#changeCategory" text="커피" />
                   <Button fx:id="latteImg" layoutX="55.0" layoutY="247.0" mnemonicParsing="false" onAction="#changeCategory" text="라떼 or 티" />

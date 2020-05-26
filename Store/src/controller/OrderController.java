@@ -195,61 +195,28 @@ public class OrderController implements Initializable{
 	}
 
 	@FXML
-	public void inputItem(ActionEvent event) {
-		// todo 이미 담긴 상품 클릭시 처리
-		if (event.getSource().equals(btn_01)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_01.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_01.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_02)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_02.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_02.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_03)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_03.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_03.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_04)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_04.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_04.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_04)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_04.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_04.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_05)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_05.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_05.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_06)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_06.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_06.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_07)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_07.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_07.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_08)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_08.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_08.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-		} else if (event.getSource().equals(btn_09)) {
-			itemList.add(new TableRowDataModel(new SimpleStringProperty(nameLabel_09.getText()),
-					new SimpleIntegerProperty(Integer.parseInt(priceLabel_09.getText())),
-					new SimpleIntegerProperty(1)));
-			inputItemToTable(itemList);
-			
-		}
-	}
+	   public void inputItem(ActionEvent event) {
+	      // todo 이미 담긴 상품 클릭시 처리
+	      if (event.getSource().equals(btn_01)) {
+	         inputItemToTable(itemList, nameLabel_01, priceLabel_01);
+	      } else if (event.getSource().equals(btn_02)) {
+	         inputItemToTable(itemList, nameLabel_02, priceLabel_02);
+	      } else if (event.getSource().equals(btn_03)) {
+	         inputItemToTable(itemList, nameLabel_03, priceLabel_03);
+	      } else if (event.getSource().equals(btn_04)) {
+	         inputItemToTable(itemList, nameLabel_04, priceLabel_04);
+	      } else if (event.getSource().equals(btn_05)) {
+	         inputItemToTable(itemList, nameLabel_05, priceLabel_05);
+	      } else if (event.getSource().equals(btn_06)) {
+	         inputItemToTable(itemList, nameLabel_06, priceLabel_06);
+	      } else if (event.getSource().equals(btn_07)) {
+	         inputItemToTable(itemList, nameLabel_07, priceLabel_07);
+	      } else if (event.getSource().equals(btn_08)) {
+	         inputItemToTable(itemList, nameLabel_08, priceLabel_08);
+	      } else if (event.getSource().equals(btn_09)) {
+	         inputItemToTable(itemList, nameLabel_09, priceLabel_09);
+	      }
+	   }
 
 	public void changeMenu(StringTokenizer st) {
 		int i = 0;
@@ -262,12 +229,33 @@ public class OrderController implements Initializable{
 		}
 	}
 	
-	public void inputItemToTable(ObservableList<TableRowDataModel> itemList) {
-		Mname.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
-		Mcount.setCellValueFactory(cellData -> cellData.getValue().countProperty().asObject());
-		Mprice.setCellValueFactory(cellData -> cellData.getValue().priceProperty().asObject());
-		orderListTable.setItems(itemList);
-	}
+	public void inputItemToTable(ObservableList<TableRowDataModel> itemList, Label nameLabel, Label priceLabel) {
+	      int i = itemList.size();
+	      String text = nameLabel.getText();
+	      boolean isExist = false;
+
+	      while (i-- > 0) {
+	          if (itemList.get(i).nameProperty().getValue().equals(text)) {
+	             int cnt = itemList.get(i).countProperty().getValue() + 1;
+	             itemList.get(i).setMcount(new SimpleIntegerProperty(cnt));
+	             int price = itemList.get(i).priceProperty().getValue();
+	             int priceText = Integer.parseInt(priceLabel.getText());
+	             itemList.get(i).setMprice(new SimpleIntegerProperty(price + priceText));
+	             isExist = true;
+	          }
+	       }
+
+	      if (i == 0 || !isExist) {
+	         itemList.add(new TableRowDataModel(new SimpleStringProperty(text),
+	               new SimpleIntegerProperty(Integer.parseInt(priceLabel.getText())), new SimpleIntegerProperty(1)));
+	      }
+
+	      Mname.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
+	      Mcount.setCellValueFactory(cellData -> cellData.getValue().countProperty().asObject());
+	      Mprice.setCellValueFactory(cellData -> cellData.getValue().priceProperty().asObject());
+	      orderListTable.setItems(itemList);
+	      orderListTable.refresh();
+	   }
 
 	@FXML
 	public void finish(ActionEvent event) {
@@ -308,7 +296,6 @@ public class OrderController implements Initializable{
 			chatArea.appendText("[ 채팅방 접속] \n");
 			input.requestFocus();
 		});
-		
 		input.setOnAction(event->{
 			send(user_id+":" + input.getText() + "\n");
 			input.setText("");
